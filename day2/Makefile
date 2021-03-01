@@ -8,7 +8,7 @@ clean:
 	rm -rf helloos.bin helloos.img
 
 qemu: all
-	qemu-system-i386 helloos.img
+	qemu-system-i386 -fda helloos.img
 
 .PHONY:
 	all
