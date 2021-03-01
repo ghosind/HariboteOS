@@ -1,5 +1,7 @@
 ; hello-os
 
+CYLS EQU 10               ; 读取的柱面数量（CYLS = cylinders）
+
   ORG   0x7c00            ; 指明程序的装载地址
 
 ; 用于标准FAT12格式的软盘
@@ -39,6 +41,7 @@ entry:
   MOV   DH, 0             ; 磁头0
   MOV   CL, 2             ; 扇区2
 
+readloop:
   MOV   SI, 0             ; 记录失败次数的寄存器
 retry:
   MOV   AH, 0x02          ; AH=0x02：读盘
@@ -46,7 +49,7 @@ retry:
   MOV   BX, 0
   MOV   DL, 0x00          ; A驱动器
   INT   0x13              ; 调用磁盘BIOS
-  JNC   fin               ; 没出错跳转到fin
+  JNC   next              ; 没出错跳转到next
 
   ADD   SI, 1             ; 失败次数+1
   CMP   SI, 5             ; 失败次数是否达到5次
@@ -55,6 +58,28 @@ retry:
   MOV   DL, 0x00          ; A驱动器
   INT   0x13              ; 重置驱动器
   JMP   retry
+
+next:
+  MOV   AX, ES            ; 把内存地址后移0x200
+  ADD   AX, 0x0020
+  MOV   ES, AX            ; 实现ES += 0x0020的目的
+
+  ; 扇区范围 1～18
+  ADD   CL, 1             ; 扇区加1
+  CMP   CL, 18            ; 扇区是否达到18
+  JBE   readloop          ; 小于等于18扇区则跳转到readloop
+
+  MOV   CL, 1             ; 恢复到扇区1
+  ; 磁头范围 0～1（正面0，反面1）
+  ADD   DH, 1
+  CMP   DH, 2
+  JB    readloop          ; 磁头未达到2则跳转到readloop
+
+  MOV   DH, 0
+  ; 柱面范围 0 ～ 79
+  ADD   CH, 1
+  CMP   CH, CYLS
+  JB    readloop          ; 读取指定数量的柱面，未达到CYLS则跳转readloop
 
 fin:
   HLT                     ; CPU停止，等待指令
