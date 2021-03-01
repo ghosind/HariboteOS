@@ -1,5 +1,4 @@
 ; hello-os
-; TAB=4
 
 ; 标准FAT12格式软盘专用代码
   DB    0xeb, 0x4e, 0x90
@@ -30,12 +29,12 @@
   DB    0xee, 0xf4, 0xeb, 0xfd
 
 ; 信息显示部分
-  DB    0x0a, 0x0a
+  DB    0x0a, 0x0a        ; 两个换行
   DB    "hello, world"
-  DB    0x0a
+  DB    0x0a              ; 换行
   DB    0
 
-  RESB  0x1fe - ($ - $$)
+  RESB  0x1fe - ($ - $$)  ; 填写0x00，直到0x001fe
   DB    0x55, 0xaa
 
 ; 启动区外部分的输出
