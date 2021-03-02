@@ -1,13 +1,13 @@
 ; hello-os
 
-CYLS EQU 10               ; 读取的柱面数量（CYLS = cylinders）
+CYLS   EQU   10               ; 读取的柱面数量（CYLS = cylinders）
 
   ORG   0x7c00            ; 指明程序的装载地址
 
 ; 用于标准FAT12格式的软盘
   JMP   entry
-  DB    0x90
-  DB    "HELLOIPL"        ; 启动区名称可以是任意的字符串（8字节）
+  NOP                     ; DB 0x90
+  DB    "HARIBOTE"        ; 启动区名称可以是任意的字符串（8字节）
   DW    512               ; 每个扇区（sector）的大小（必须为512字节）
   DB    1                 ; 每个簇（cluster）的大小（必须为1个扇区）
   DW    1                 ; FAT的起始位置（一般从第一个扇区开始）
@@ -20,9 +20,12 @@ CYLS EQU 10               ; 读取的柱面数量（CYLS = cylinders）
   DW    2                 ; 磁头数（必须为2）
   DD    0                 ; 不使用分区（必须为0）
   DD    2880              ; 重写一次磁盘的大小
-  DB    0, 0, 0x29        ; 意义不明，固定
-  DD    0xffffffff        ; （可能是）卷标号码
-  DB    "HELLO-OS   "     ; 磁盘的名称（11字节）
+  ; DB    0, 0, 0x29        ; 意义不明，固定
+  DB    0                 ; 中断0x13使用的驱动器号
+  DB    0                 ; Windows NT标志
+  DB    0x29              ; 扩展引导标记
+  DD    0xffffffff        ; 卷序列号
+  DB    "HARIBOTEOS "     ; 磁盘的名称（11字节）
   DB    "FAT12   "        ; 磁盘格式名称（8字节）
   RESB  18                ; 空18字节
 
@@ -33,7 +36,7 @@ entry:
   MOV   SS, AX
   MOV   SP, 0x7c00
   MOV   DS, AX
-  
+
 ; 读取硬盘
   MOV   AX, 0x0820
   MOV   ES, AX
@@ -80,6 +83,10 @@ next:
   ADD   CH, 1
   CMP   CH, CYLS
   JB    readloop          ; 读取指定数量的柱面，未达到CYLS则跳转readloop
+
+; 读取完毕，跳转到haribote.sys执行
+  MOV   [0x0ff0], CH      ; 记下IPL读了多远（谷歌翻译自IPLがどこまで読んだのかをメモ）
+  JMP   0xc200
 
 fin:
   HLT                     ; CPU停止，等待指令
