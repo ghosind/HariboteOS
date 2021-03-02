@@ -2,7 +2,7 @@ AS   		:= nasm
 CC   		:= x86_64-elf-gcc
 CFLAGS	:= -Wall -m32
 
-AS_OBJS := ipl.bin asmhead.bin
+AS_OBJS := ipl.bin asmhead.bin func.bin
 C_OBJS  := bootpack.bin
 OBJS    := ${AS_OBJS} ${C_OBJS}
 

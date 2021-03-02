@@ -48,67 +48,70 @@ VRAM    EQU   0x0ff8      ; 图像缓冲区的起始位置
   CALL  waitkbdout
 
 ; 切换到保护模式
+; NASM不支持INSTRSET命令
 ; [INSTRSET "i486p"]        ; 使用486指令
   LGDT  [GDTR0]           ; 设置临时GDT
   MOV   EAX, CR0
-  AND   EAX, 0x7fffffff
-  OR    EAX, 0x00000001
+  AND   EAX, 0x7fffffff   ; 禁用分页
+  OR    EAX, 0x00000001   ; 开启保护模式
   MOV   CR0, EAX
   JMP   pipelineflush
 
 pipelineflush:
-  MOV   AX, 1 * 8
+  MOV   AX, 1*8           ; 写32bit段
   MOV   DS, AX
   MOV   ES, AX
   MOV   FS, AX
   MOV   GS, AX
   MOV   SS, AX
 
-;
-  MOV   ESI, bootpack
-  MOV   EDI, BOTPAK
-  MOV   ECX, 512 * 1024 / 4
+; bootpack传递
+  MOV   ESI, bootpack     ; 源 
+  MOV   EDI, BOTPAK       ; 目标
+  MOV   ECX, 512*1024/4
   CALL  memcpy
 
-;
+; 传输磁盘数据
 
-;
-  MOV   ESI, 0x7c00
-  MOV   EDI, DSKCAC
-  MOV   ECX, 512 / 4
+; 从引导区开始
+
+  MOV   ESI, 0x7c00       ; 源
+  MOV   EDI, DSKCAC       ; 目标
+  MOV   ECX, 512/4
   CALL  memcpy
 
-;
-  MOV   ESI, DSKCAC0 + 512
-  MOV   EDI, DSKCAC + 512
+; 剩余的全部
+  MOV   ESI, DSKCAC0+512  ; 源
+  MOV   EDI, DSKCAC+512   ; 目标
   MOV   ECX, 0
   MOV   CL, BYTE [CYLS]
-  IMUL  ECX, 512 * 18 * 2 / 4
-  SUB   ECX, 512 / 4
+  IMUL  ECX, 512*18*2/4   ; 除以4得到字节数
+  SUB   ECX, 512/4        ; IPL偏移量
   CALL  memcpy
 
-;
-;
+; 由于还需要asmhead才能完成
+; 完成其余的bootpack任务
 
-;
+; bootpack启动
+
   MOV   EBX, BOTPAK
-  MOV   ECX, [EBX + 16]
-  ADD   ECX, 3
-  SHR   ECX, 2
-  JZ    skip
-  MOV   ESI, [EBX + 20]
+  MOV   ECX, [EBX+16]
+  ADD   ECX, 3            ; ECX += 3
+  SHR   ECX, 2            ; ECS /= 4
+  JZ    skip              ; 传输完成
+  MOV   ESI, [EBX+20]     ; 源
   ADD   ESI, EBX
-  MOV   EDI, [EBX + 12]
+  MOV   EDI, [EBX+12]     ; 目标
   CALL  memcpy
 
 skip:
-  MOV   ESP, [EBX + 12]
-  JMP   DWORD 2 * 8:0x0000001b
+  MOV   ESP, [EBX+12]     ; 堆栈初始化
+  JMP   DWORD 2*8:0x0000001b
 
 waitkbdout:
   IN    AL, 0x64
   AND   AL, 0x02
-  JNZ   waitkbdout
+  JNZ   waitkbdout        ; AND结果不为0跳转至waitkbdout
   RET
 
 memcpy:
@@ -117,20 +120,20 @@ memcpy:
   MOV   [EDI], EAX
   ADD   EDI, 4
   SUB   ECX, 1
-  JNZ   memcpy
+  JNZ   memcpy            ; 结果不为0跳转至memcpy
   RET
-;
+; memcpy地址前缀大小
 
   ALIGN 16
 GDT0:
-  RESB  8
-  DW    0xffff, 0x0000, 0x9200, 0x00cf
-  DW    0xffff, 0x0000, 0x9a28, 0x0047
+  RESB  8                 ; 初始值
+  DW    0xffff, 0x0000, 0x9200, 0x00cf  ; 可写的32位段寄存器
+  DW    0xffff, 0x0000, 0x9a28, 0x0047  ; 可执行的文件的32位寄存器
 
   DW    0
 
 GDTR0:
-  DW    8 * 3 - 1
+  DW    8*3-1
   DD    GDT0
 
   ALIGN 16
