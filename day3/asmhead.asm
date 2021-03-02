@@ -38,6 +38,8 @@ VRAM    EQU   0x0ff8      ; 图像缓冲区的起始位置
   NOP                     ; 有些机器不能连续执行NOP指令
   OUT   0xa1, AL
 
+  CLI
+
 ; 设置A20GATE使CPU支持1M以上的内存
   CALL  waitkbdout
   MOV   AL, 0xd1
@@ -50,6 +52,7 @@ VRAM    EQU   0x0ff8      ; 图像缓冲区的起始位置
 ; 切换到保护模式
 ; NASM不支持INSTRSET命令
 ; [INSTRSET "i486p"]        ; 使用486指令
+  [BITS 32]
   LGDT  [GDTR0]           ; 设置临时GDT
   MOV   EAX, CR0
   AND   EAX, 0x7fffffff   ; 禁用分页

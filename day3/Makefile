@@ -1,38 +1,41 @@
 AS   		:= nasm
 CC   		:= x86_64-elf-gcc
+LD			:= x86_64-elf-ld
+OBJCOPY := x86_64-elf-objcopy
 CFLAGS	:= -Wall -m32
-
-AS_OBJS := ipl.bin asmhead.bin func.bin
-C_OBJS  := bootpack.bin
-OBJS    := ${AS_OBJS} ${C_OBJS}
 
 SYS  		:= haribote.sys
 IMG  		:= haribote.img
 
-%.bin: %.asm
-	$(AS) $< -o $@
+ipl.bin:
+	$(AS) -f bin ipl.asm -o ipl.bin
 
-%.bin: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
+asmhead.bin:
+	$(AS) -f bin asmhead.asm -o asmhead.bin
 
-haribote.sys:
-	cat asmhead.bin bootpack.bin > haribote.sys
+bootpack.bin:
+	$(CC) $(CFLAGS) -m32 -c bootpack.c -o bootpack.bin
 
-image:
-	dd if=ipl.bin of=$(IMG) bs=512
-	# 0x2600写入文件名，此处忽略
-	# 软盘在0x4200（扇区34）以后存放文件内容，使用0填充填充扇区1～33
-	dd if=/dev/zero of=$(IMG) seek=1 bs=512 count=31
-	# 写入系统内容
-	dd if=haribote.sys of=$(IMG) seek=33 bs=512
-	# 使用0填充
-	dd if=/dev/zero of=$(IMG) seek=34 bs=512 count=2846
+func.bin:
+	$(AS) -f elf func.asm -o func.bin
 
-all: ${OBJS} haribote.sys image
+haribote.sys: asmhead.bin bootpack.bin func.bin
+	x86_64-elf-ld -m elf_i386 bootpack.bin func.bin -o bootpack.obj
+	x86_64-elf-objcopy -S -O binary bootpack.obj bootpack.sys
+	cat asmhead.bin > haribote.sys
+	cat bootpack.sys >> haribote.sys
+
+image: ipl.bin haribote.sys
+	dd if=/dev/zero of=$(IMG) bs=512 count=2880
+	dd if=ipl.bin of=$(IMG) bs=512 count=1 conv=notrunc
+	dd if=haribote.sys of=$(IMG) bs=512 conv=notrunc
+	
+all: image
 
 clean:
 	rm -rf *.bin
 	rm -rf *.sys
+	rm -rf *.obj
 	rm -rf $(IMG)
 
 qemu: all
