@@ -14,6 +14,7 @@ VRAM    EQU   0x0ff8      ; 图像缓冲区的起始位置
 
   ORG   0xc200            ; 程序被加载的内存地址
 
+  [BITS 16]
 ; 设置屏幕模式
   MOV   AL, 0x13          ; VGA显卡，320x200x8 bit
   MOV   AH, 0x00
@@ -52,7 +53,6 @@ VRAM    EQU   0x0ff8      ; 图像缓冲区的起始位置
 ; 切换到保护模式
 ; NASM不支持INSTRSET命令
 ; [INSTRSET "i486p"]        ; 使用486指令
-  [BITS 32]
   LGDT  [GDTR0]           ; 设置临时GDT
   MOV   EAX, CR0
   AND   EAX, 0x7fffffff   ; 禁用分页
@@ -69,7 +69,7 @@ pipelineflush:
   MOV   SS, AX
 
 ; bootpack传递
-  MOV   ESI, bootpack     ; 源 
+  MOV   ESI, bootpack     ; 源
   MOV   EDI, BOTPAK       ; 目标
   MOV   ECX, 512*1024/4
   CALL  memcpy
@@ -96,20 +96,22 @@ pipelineflush:
 ; 完成其余的bootpack任务
 
 ; bootpack启动
-
-  MOV   EBX, BOTPAK
-  MOV   ECX, [EBX+16]
-  ADD   ECX, 3            ; ECX += 3
-  SHR   ECX, 2            ; ECS /= 4
-  JZ    skip              ; 传输完成
-  MOV   ESI, [EBX+20]     ; 源
-  ADD   ESI, EBX
-  MOV   EDI, [EBX+12]     ; 目标
-  CALL  memcpy
+; 修改后检验不通过，移除校验
+  ; MOV   EBX, BOTPAK
+  ; MOV   ECX, [EBX+16]
+  ; ADD   ECX, 3            ; ECX += 3
+  ; SHR   ECX, 2            ; ECX /= 4
+  ; JZ    skip              ; 传输完成
+  ; MOV   ESI, [EBX+20]     ; 源
+  ; ADD   ESI, EBX
+  ; MOV   EDI, [EBX+12]     ; 目标
+  ; CALL  memcpy
 
 skip:
-  MOV   ESP, [EBX+12]     ; 堆栈初始化
-  JMP   DWORD 2*8:0x0000001b
+  ; MOV   ESP, [EBX+12]     ; 堆栈初始化
+  ; JMP   DWORD 2*8:0x0000001b
+  MOV   ESP, 0xffff
+  JMP   DWORD 2*8:0x00000000
 
 waitkbdout:
   IN    AL, 0x64
@@ -119,7 +121,7 @@ waitkbdout:
 
 memcpy:
   MOV   EAX, [ESI]
-  AND   ESI, 4
+  ADD   ESI, 4
   MOV   [EDI], EAX
   ADD   EDI, 4
   SUB   ECX, 1

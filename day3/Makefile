@@ -1,11 +1,25 @@
-AS   		:= nasm
-CC   		:= x86_64-elf-gcc
-LD			:= x86_64-elf-ld
-OBJCOPY := x86_64-elf-objcopy
-CFLAGS	:= -Wall -m32
+ifndef GCCPREFIX
+GCCPREFIX :=
+endif
 
+AS   		:= nasm
+CC   		:= $(GCCPREFIX)gcc
+LD			:= $(GCCPREFIX)ld
+OBJCOPY := $(GCCPREFIX)objcopy
+CFLAGS	:= -Wall -m32
+QEMU    := qemu-system-i386
+
+OBJS    := ipl.bin asmhead.bin bootpack.bin func.bin
 SYS  		:= haribote.sys
 IMG  		:= haribote.img
+
+QEMU_FLAGS :=
+
+ifdef DEBUG
+QEMU_FLAGS += -gdb tcp::1234 -S
+CFLAGS += -g
+
+endif
 
 ipl.bin:
 	$(AS) -f bin ipl.asm -o ipl.bin -l ipl.lst
@@ -14,14 +28,14 @@ asmhead.bin:
 	$(AS) -f bin asmhead.asm -o asmhead.bin -l asmhead.lst
 
 bootpack.bin:
-	$(CC) $(CFLAGS) -m32 -c bootpack.c -o bootpack.bin
+	$(CC) $(CFLAGS) -c bootpack.c -o bootpack.bin
 
 func.bin:
 	$(AS) -f elf func.asm -o func.bin -l func.lst
 
 haribote.sys: asmhead.bin bootpack.bin func.bin
-	x86_64-elf-ld -m elf_i386 bootpack.bin func.bin -o bootpack.obj
-	x86_64-elf-objcopy -S -O binary bootpack.obj bootpack.sys
+	$(LD) -m elf_i386 bootpack.bin func.bin -o bootpack.obj
+	$(OBJCOPY) -S -O binary bootpack.obj bootpack.sys
 	cat asmhead.bin > haribote.sys
 	cat bootpack.sys >> haribote.sys
 
@@ -29,8 +43,8 @@ image: ipl.bin haribote.sys
 	dd if=/dev/zero of=$(IMG) bs=512 count=2880
 	dd if=ipl.bin of=$(IMG) bs=512 count=1 conv=notrunc
 	dd if=haribote.sys of=$(IMG) seek=33 bs=512 conv=notrunc
-	
-all: image
+
+all: ${OBJS} haribote.sys image
 
 clean:
 	rm -rf *.bin
@@ -39,8 +53,8 @@ clean:
 	rm -rf *.lst
 	rm -rf $(IMG)
 
-qemu: all
-	qemu-system-i386 -fda $(IMG) -gdb tcp::1234 -S
+qemu: clean all
+	$(QEMU) -fda $(IMG) $(QEMU_FLAGS)
 
 .PHONY:
 	all
