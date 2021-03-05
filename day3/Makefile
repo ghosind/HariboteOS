@@ -34,8 +34,7 @@ func.bin:
 	$(AS) -f elf func.asm -o func.bin -l func.lst
 
 haribote.sys: asmhead.bin bootpack.bin func.bin
-	$(LD) -m elf_i386 bootpack.bin func.bin -o bootpack.obj
-	$(OBJCOPY) -S -O binary bootpack.obj bootpack.sys
+	$(LD) -m elf_i386 --oformat binary bootpack.bin func.bin -o bootpack.sys -T bootpack.ld
 	cat asmhead.bin > haribote.sys
 	cat bootpack.sys >> haribote.sys
 

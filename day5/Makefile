@@ -37,8 +37,7 @@ hankaku.bin:
 	$(AS) -f elf hankaku.asm -o hankaku.bin -l hankaku.lst
 
 haribote.sys: asmhead.bin bootpack.bin func.bin hankaku.bin
-	$(LD) -m elf_i386 bootpack.bin func.bin hankaku.bin -o bootpack.obj
-	$(OBJCOPY) -S -O binary bootpack.obj bootpack.sys
+	$(LD) -m elf_i386 --oformat binary bootpack.bin func.bin hankaku.bin -o bootpack.sys -T bootpack.ld
 	cat asmhead.bin > haribote.sys
 	cat bootpack.sys >> haribote.sys
 
