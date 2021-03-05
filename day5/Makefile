@@ -9,7 +9,7 @@ OBJCOPY := $(GCCPREFIX)objcopy
 CFLAGS	:= -Wall -m32
 QEMU    := qemu-system-i386
 
-OBJS    := ipl.bin asmhead.bin bootpack.bin func.bin hankaku.bin
+OBJS    := ipl.bin asmhead.bin bootpack.bin io.bin hankaku.bin
 SYS  		:= haribote.sys
 IMG  		:= haribote.img
 
@@ -30,14 +30,14 @@ asmhead.bin:
 bootpack.bin:
 	$(CC) $(CFLAGS) -c bootpack.c -o bootpack.bin
 
-func.bin:
-	$(AS) -f elf func.asm -o func.bin -l func.lst
+io.bin:
+	$(AS) -f elf io.asm -o io.bin -l io.lst
 
 hankaku.bin:
 	$(AS) -f elf hankaku.asm -o hankaku.bin -l hankaku.lst
 
-haribote.sys: asmhead.bin bootpack.bin func.bin hankaku.bin
-	$(LD) -m elf_i386 --oformat binary asmhead.bin bootpack.bin func.bin hankaku.bin -o haribote.sys -T haribote.ld
+haribote.sys: asmhead.bin bootpack.bin io.bin hankaku.bin
+	$(LD) -m elf_i386 --oformat binary asmhead.bin bootpack.bin io.bin hankaku.bin -o haribote.sys -T haribote.ld
 
 image: ipl.bin haribote.sys
 	dd if=/dev/zero of=$(IMG) bs=512 count=2880
