@@ -1,8 +1,9 @@
-ENTRY( main )
+ENTRY( entry )
 
 SECTIONS
 {
-  . = 0x00;
+  . = 0xc200;
+  .btext : { *(.btext) }
 
   .text : { *(.text) }
   .data : { *(.data) }

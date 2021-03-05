@@ -25,7 +25,7 @@ ipl.bin:
 	$(AS) -f bin ipl.asm -o ipl.bin -l ipl.lst
 
 asmhead.bin:
-	$(AS) -f bin asmhead.asm -o asmhead.bin -l asmhead.lst
+	$(AS) -f elf asmhead.asm -o asmhead.bin -l asmhead.lst
 
 bootpack.bin:
 	$(CC) $(CFLAGS) -c bootpack.c -o bootpack.bin
@@ -34,9 +34,7 @@ func.bin:
 	$(AS) -f elf func.asm -o func.bin -l func.lst
 
 haribote.sys: asmhead.bin bootpack.bin func.bin
-	$(LD) -m elf_i386 --oformat binary bootpack.bin func.bin -o bootpack.sys -T bootpack.ld
-	cat asmhead.bin > haribote.sys
-	cat bootpack.sys >> haribote.sys
+	$(LD) -m elf_i386 --oformat binary asmhead.bin bootpack.bin func.bin -o haribote.sys -T haribote.ld
 
 image: ipl.bin haribote.sys
 	dd if=/dev/zero of=$(IMG) bs=512 count=2880

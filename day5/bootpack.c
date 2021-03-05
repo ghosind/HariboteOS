@@ -36,10 +36,6 @@ struct BootInfo{
 
 int main(void) {
   struct BootInfo *binfo = (struct BootInfo *) 0x0ff0;
-  // char font_a[16] = {
-  //   0x00, 0x18, 0x18, 0x18, 0x18, 0x24, 0x24, 0x24,
-  //   0x24, 0x7e, 0x42, 0x42, 0x42, 0xe7, 0x00, 0x00
-  // };
   extern char hankaku[4096];
   
   init_palette();
@@ -60,7 +56,7 @@ int main(void) {
 }
 
 void init_palette(void) {
-  unsigned char table_rgb[16 * 3] = {
+  static unsigned char table_rgb[16 * 3] = {
     0x00, 0x00, 0x00, // 黑色
     0xff, 0x00, 0x00, // 亮红色
     0x00, 0xff, 0x00, // 亮绿色

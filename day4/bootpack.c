@@ -77,9 +77,7 @@ int main(void) {
 // }
 
 void init_palette(void) {
-  // 修改后无法正常读取到静态变量，所以将static移除
-  // static unsigned char table_rgb[16 * 3] = {
-  unsigned char table_rgb[16 * 3] = {
+  static unsigned char table_rgb[16 * 3] = {
     0x00, 0x00, 0x00, // 黑色
     0xff, 0x00, 0x00, // 亮红色
     0x00, 0xff, 0x00, // 亮绿色
