@@ -1,15 +1,17 @@
 #include "bootpack.h"
 #include "desctbl.h"
 #include "graphic.h"
+#include "int.h"
 #include "io.h"
 
 int main(void) {
-  struct BootInfo *binfo = (struct BootInfo *) 0x0ff0;
+  struct BootInfo *binfo = (struct BootInfo *) ADR_BOOTINFO;
   char mcursor[256];
   
   init_gdtidt();
-  init_palette();
+  init_pic();
 
+  init_palette();
   init_screen(binfo->vram, binfo->scrnx, binfo->scrny);
   
   int mx = (binfo->scrnx - 16) / 2;

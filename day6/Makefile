@@ -9,7 +9,8 @@ OBJCOPY := $(GCCPREFIX)objcopy
 CFLAGS	:= -Wall -m32 -I ./include
 QEMU    := qemu-system-i386
 
-K_OBJS  := asmhead.bin bootpack.bin io.bin pm.bin hankaku.bin desctbl.bin graphic.bin
+K_OBJS  := asmhead.bin bootpack.bin io.bin pm.bin hankaku.bin desctbl.bin \
+	graphic.bin int.bin inthandler.bin
 SYS  		:= haribote.sys
 IMG  		:= haribote.img
 

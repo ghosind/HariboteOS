@@ -23,7 +23,7 @@ void set_palette(int start, int end, unsigned char *rgb);
 void box_fill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1);
 void init_screen(unsigned char *vram, int x, int y);
 void put_font8(unsigned char *vram, int xsize, int x, int y, char c, char *font);
-void put_font8_asc(unsigned char *vram, int xsize, int x, int y, char c, char *s);
+void put_fonts8_asc(unsigned char *vram, int xsize, int x, int y, char c, char *s);
 void init_mouse_cursor8(char *mouse, char bc);
 void put_block8_8(unsigned char *vram, int vxsize, int pxsize, int pysize, int px0, int py0, char *buf, int bxsize);
 
