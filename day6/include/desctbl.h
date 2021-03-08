@@ -29,4 +29,7 @@ void init_gdtidt(void);
 void set_segmdesc(struct SegmentDescriptor *sd, unsigned int limit, int base, int ar);
 void set_gatedesc(struct GateDescriptor *gd, int offset, int selector, int ar);
 
+void load_gdtr(int limit, int addr);
+void load_idtr(int limit, int addr);
+
 #endif // _DESCTBL_H_
