@@ -13,7 +13,7 @@ asm_int_handler21:
   MOV     AX, SS
   MOV     DS, AX
   MOV     ES, AX
-  call    int_handler21
+  CALL    int_handler21
   POP     EAX
   POPAD
   POP     DS
@@ -29,7 +29,7 @@ asm_int_handler27:
   MOV     AX, SS
   MOV     DS, AX
   MOV     ES, AX
-  call    int_handler21
+  CALL    int_handler27
   POP     EAX
   POPAD
   POP     DS
@@ -45,7 +45,7 @@ asm_int_handler2c:
   MOV     AX, SS
   MOV     DS, AX
   MOV     ES, AX
-  call    int_handler21
+  CALL    int_handler2c
   POP     EAX
   POPAD
   POP     DS

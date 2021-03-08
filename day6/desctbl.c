@@ -5,7 +5,7 @@ void init_gdtidt(void) {
   struct SegmentDescriptor *gdt = (struct SegmentDescriptor *) ADR_GDT;
   struct GateDescriptor *idt = (struct GateDescriptor *) ADR_IDT;
 
-  for (int i = 0; i < LIMIT_GDT / 8; i++) {
+  for (int i = 0; i <= LIMIT_GDT / 8; i++) {
     set_segmdesc(gdt + i, 0, 0, 0);
   }
 
@@ -13,7 +13,7 @@ void init_gdtidt(void) {
   set_segmdesc(gdt + 2, LIMIT_BOOTPACK, ADR_BOOTPACK, AR_CODE32_ER);
   load_gdtr(LIMIT_GDT, ADR_GDT);
 
-  for (int i = 0; i < LIMIT_IDT / 8; i++) {
+  for (int i = 0; i <= LIMIT_IDT / 8; i++) {
     set_gatedesc(idt + i, 0, 0, 0);
   }
   load_idtr(LIMIT_IDT, ADR_IDT);

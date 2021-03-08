@@ -14,7 +14,7 @@ K_OBJS	:= asmhead.bin bootpack.bin io.bin pm.bin hankaku.bin desctbl.bin \
 SYS		:= haribote.sys
 IMG		:= haribote.img
 
-QEMU_FLAGS :=
+QEMU_FLAGS := -device virtio-keyboard-pci -device virtio-mouse-pci -no-reboot
 
 ifdef DEBUG
 QEMU_FLAGS += -gdb tcp::1234 -S

@@ -7,13 +7,13 @@
 int main(void) {
   struct BootInfo *binfo = (struct BootInfo *) ADR_BOOTINFO;
   char mcursor[256];
-  
+
   init_gdtidt();
   init_pic();
 
   init_palette();
   init_screen(binfo->vram, binfo->scrnx, binfo->scrny);
-  
+
   int mx = (binfo->scrnx - 16) / 2;
 	int my = (binfo->scrny - 28 - 16) / 2;
 	init_mouse_cursor8(mcursor, COL8_008484);
