@@ -1,11 +1,11 @@
 all:
-  nasm helloos.asm -o helloos.bin
+	nasm helloos.asm -o helloos.bin
 
 clean:
-  rm -rf helloos.bin
+	rm -rf helloos.bin
 
 qemu: all
-  qemu-system-i386 -fda helloos.bin
+	qemu-system-i386 -fda helloos.bin
 
 .PHONY:
-  all
+	all
