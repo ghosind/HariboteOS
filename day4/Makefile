@@ -2,23 +2,22 @@ ifndef GCCPREFIX
 GCCPREFIX :=
 endif
 
-AS   		:= nasm
-CC   		:= $(GCCPREFIX)gcc
-LD			:= $(GCCPREFIX)ld
-OBJCOPY := $(GCCPREFIX)objcopy
+AS		:= nasm
+CC		:= $(GCCPREFIX)gcc
+LD		:= $(GCCPREFIX)ld
+OBJCOPY	:= $(GCCPREFIX)objcopy
 CFLAGS	:= -Wall -m32
-QEMU    := qemu-system-i386
+QEMU	:= qemu-system-i386
 
-OBJS    := ipl.bin asmhead.bin bootpack.bin func.bin
-SYS  		:= haribote.sys
-IMG  		:= haribote.img
+OBJS	:= ipl.bin asmhead.bin bootpack.bin func.bin
+SYS		:= haribote.sys
+IMG		:= haribote.img
 
 QEMU_FLAGS :=
 
 ifdef DEBUG
 QEMU_FLAGS += -gdb tcp::1234 -S
 CFLAGS += -g
-
 endif
 
 ipl.bin:

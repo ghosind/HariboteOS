@@ -2,23 +2,22 @@ ifndef GCCPREFIX
 GCCPREFIX :=
 endif
 
-AS   		:= nasm
-CC   		:= $(GCCPREFIX)gcc
-LD			:= $(GCCPREFIX)ld
-OBJCOPY := $(GCCPREFIX)objcopy
+AS		:= nasm
+CC		:= $(GCCPREFIX)gcc
+LD		:= $(GCCPREFIX)ld
+OBJCOPY	:= $(GCCPREFIX)objcopy
 CFLAGS	:= -Wall -m32
-QEMU    := qemu-system-i386
+QEMU	:= qemu-system-i386
 
-OBJS    := ipl.bin asmhead.bin bootpack.bin io.bin pm.bin hankaku.bin
-SYS  		:= haribote.sys
-IMG  		:= haribote.img
+OBJS	:= ipl.bin asmhead.bin bootpack.bin io.bin pm.bin hankaku.bin
+SYS		:= haribote.sys
+IMG		:= haribote.img
 
 QEMU_FLAGS :=
 
 ifdef DEBUG
 QEMU_FLAGS += -gdb tcp::1234 -S
 CFLAGS += -g
-
 endif
 
 ipl.bin:
@@ -41,11 +40,11 @@ hankaku.bin:
 
 haribote.sys: asmhead.bin bootpack.bin io.bin pm.bin hankaku.bin
 	$(LD) -m elf_i386 --oformat binary -o haribote.sys -T haribote.ld \
-		 asmhead.bin \
-		 bootpack.bin \
-		 io.bin \
-		 pm.bin \
-		 hankaku.bin
+		asmhead.bin \
+		bootpack.bin \
+		io.bin \
+		pm.bin \
+		hankaku.bin
 
 image: ipl.bin haribote.sys
 	dd if=/dev/zero of=$(IMG) bs=512 count=2880
