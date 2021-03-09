@@ -9,15 +9,20 @@ int main(void) {
   char mcursor[256];
 
   init_gdtidt();
-  init_pic();
+  init_pic(); // GDT/IDT完成初始化，开放CPU中断
+
+  io_sti();
 
   init_palette();
-  init_screen(binfo->vram, binfo->scrnx, binfo->scrny);
+  init_screen8(binfo->vram, binfo->scrnx, binfo->scrny);
 
   int mx = (binfo->scrnx - 16) / 2;
 	int my = (binfo->scrny - 28 - 16) / 2;
 	init_mouse_cursor8(mcursor, COL8_008484);
 	put_block8_8(binfo->vram, binfo->scrnx, 16, 16, mx, my, mcursor, 16);
+
+  io_out8(PIC0_IMR, 0xf9); // 开放PIC1以及键盘中断
+  io_out8(PIC1_IMR, 0xef); // 开放鼠标中断
 
   for (;;) {
     io_hlt();

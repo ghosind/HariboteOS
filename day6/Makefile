@@ -6,7 +6,7 @@ AS		:= nasm
 CC		:= $(GCCPREFIX)gcc
 LD		:= $(GCCPREFIX)ld
 OBJCOPY	:= $(GCCPREFIX)objcopy
-CFLAGS	:= -Wall -m32 -I ./include
+CFLAGS	:= -Wall -m32 -I ./include -ffunction-sections
 QEMU	:= qemu-system-i386
 
 K_OBJS	:= asmhead.bin bootpack.bin io.bin pm.bin hankaku.bin desctbl.bin \
@@ -25,7 +25,7 @@ ipl.bin:
 	$(AS) -f bin ipl.asm -o ipl.bin -l ipl.lst
 
 %.bin: %.asm
-	$(AS) -f elf $< -o $@
+	$(AS) -f elf $< -o $@ -l $(subst .asm,.lst,$<)
 
 %.bin: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
