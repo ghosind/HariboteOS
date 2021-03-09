@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #include "io.h"
 #include "pm.h"
 
@@ -51,7 +53,7 @@ void set_gatedesc(struct GateDescriptor *gd, int offset, int selector, int ar);
 
 int main(void) {
   struct BootInfo *binfo = (struct BootInfo *) 0x0ff0;
-  char mcursor[256];
+  char s[40], mcursor[256];
   
   init_gdtidt();
   init_palette();
@@ -62,6 +64,13 @@ int main(void) {
 	int my = (binfo->scrny - 28 - 16) / 2;
 	init_mouse_cursor8(mcursor, COL8_008484);
 	put_block8_8(binfo->vram, binfo->scrnx, 16, 16, mx, my, mcursor, 16);
+
+  put_fonts8_asc(binfo->vram, binfo->scrnx,  8,  8, COL8_FFFFFF, "ABC 123");
+  put_fonts8_asc(binfo->vram, binfo->scrnx, 31, 31, COL8_000000, "Haribote OS.");
+  put_fonts8_asc(binfo->vram, binfo->scrnx, 30, 30, COL8_FFFFFF, "Haribote OS.");
+
+  sprintf(s, "scrnx = %d", binfo->scrnx);
+  put_fonts8_asc(binfo->vram, binfo->scrnx, 16, 64, COL8_FFFFFF, s);
 
   for (;;) {
     io_hlt();

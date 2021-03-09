@@ -6,14 +6,15 @@ AS		:= nasm
 CC		:= $(GCCPREFIX)gcc
 LD		:= $(GCCPREFIX)ld
 OBJCOPY	:= $(GCCPREFIX)objcopy
-CFLAGS	:= -Wall -m32
+CFLAGS	:= -Wall -m32 -I . -I ./libc/include -ffunction-sections
 QEMU	:= qemu-system-i386
 
-OBJS	:= ipl.bin asmhead.bin bootpack.bin io.bin pm.bin hankaku.bin
+L_OBJS  := libc/stdio/stdio.bin
+K_OBJS	:= asmhead.bin bootpack.bin io.bin pm.bin hankaku.bin
 SYS		:= haribote.sys
 IMG		:= haribote.img
 
-QEMU_FLAGS :=
+QEMU_FLAGS := -no-reboot
 
 ifdef DEBUG
 QEMU_FLAGS += -gdb tcp::1234 -S
@@ -23,28 +24,14 @@ endif
 ipl.bin:
 	$(AS) -f bin ipl.asm -o ipl.bin -l ipl.lst
 
-asmhead.bin:
-	$(AS) -f elf asmhead.asm -o asmhead.bin -l asmhead.lst
+%.bin: %.asm
+	$(AS) -f elf $< -o $@ -l $(subst .asm,.lst,$<)
 
-bootpack.bin:
-	$(CC) $(CFLAGS) -c bootpack.c -o bootpack.bin
+%.bin: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
-io.bin:
-	$(AS) -f elf io.asm -o io.bin -l io.lst
-
-pm.bin:
-	$(AS) -f elf pm.asm -o pm.bin -l pm.lst
-
-hankaku.bin:
-	$(AS) -f elf hankaku.asm -o hankaku.bin -l hankaku.lst
-
-haribote.sys: asmhead.bin bootpack.bin io.bin pm.bin hankaku.bin
-	$(LD) -m elf_i386 --oformat binary -o haribote.sys -T haribote.ld \
-		asmhead.bin \
-		bootpack.bin \
-		io.bin \
-		pm.bin \
-		hankaku.bin
+haribote.sys: ${K_OBJS} ${L_OBJS}
+	$(LD) -m elf_i386 --oformat binary -o haribote.sys -T haribote.ld $^
 
 image: ipl.bin haribote.sys
 	dd if=/dev/zero of=$(IMG) bs=512 count=2880
@@ -59,6 +46,7 @@ clean:
 	rm -rf *.obj
 	rm -rf *.lst
 	rm -rf $(IMG)
+	rm -rf **/**/*.bin
 
 qemu: clean all
 	$(QEMU) -fda $(IMG) $(QEMU_FLAGS)
