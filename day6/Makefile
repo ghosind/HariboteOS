@@ -6,9 +6,10 @@ AS		:= nasm
 CC		:= $(GCCPREFIX)gcc
 LD		:= $(GCCPREFIX)ld
 OBJCOPY	:= $(GCCPREFIX)objcopy
-CFLAGS	:= -Wall -m32 -I ./include -ffunction-sections
+CFLAGS	:= -Wall -m32 -I ./include -I ./libc/include -ffunction-sections
 QEMU	:= qemu-system-i386
 
+L_OBJS  := libc/stdio/stdio.bin
 K_OBJS	:= asmhead.bin bootpack.bin io.bin pm.bin hankaku.bin desctbl.bin \
 		graphic.bin int.bin inthandler.bin
 SYS		:= haribote.sys
@@ -30,7 +31,7 @@ ipl.bin:
 %.bin: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-haribote.sys: ${K_OBJS}
+haribote.sys: ${K_OBJS} ${L_OBJS}
 	$(LD) -m elf_i386 --oformat binary -o haribote.sys -T haribote.ld $^
 
 image: ipl.bin haribote.sys
@@ -46,6 +47,7 @@ clean:
 	rm -rf *.obj
 	rm -rf *.lst
 	rm -rf $(IMG)
+	rm -rf **/**/*.bin
 
 qemu: clean all
 	$(QEMU) -fda $(IMG) $(QEMU_FLAGS)
