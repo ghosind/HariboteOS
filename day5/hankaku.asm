@@ -1,5 +1,6 @@
   GLOBAL hankaku
 
+  [SECTION .data]
 hankaku:
   ; char 0x00b
   DB 00000000b
