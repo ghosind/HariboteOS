@@ -13,11 +13,8 @@ SCRNY   EQU   0x0ff6      ; 分辨率Y
 VRAM    EQU   0x0ff8      ; 图像缓冲区的起始位置
 
   ; 使用linker script指定起始地址
-  ; ORG   0xc200            ; 程序被加载的内存地址
+  ORG   0xc200            ; 程序被加载的内存地址
 
-  GLOBAL entry
-
-  [SECTION .btext]
   [BITS 16]
 entry:
 ; 设置屏幕模式

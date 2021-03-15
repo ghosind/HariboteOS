@@ -2,8 +2,8 @@
 #include "int.h"
 
 void init_gdtidt(void) {
-  struct SegmentDescriptor *gdt = (struct SegmentDescriptor *) ADR_GDT;
-  struct GateDescriptor *idt = (struct GateDescriptor *) ADR_IDT;
+  struct SegmentDescriptor *gdt = (struct SegmentDescriptor *)ADR_GDT;
+  struct GateDescriptor *idt = (struct GateDescriptor *)ADR_IDT;
 
   for (int i = 0; i <= LIMIT_GDT / 8; i++) {
     set_segmdesc(gdt + i, 0, 0, 0);
@@ -18,12 +18,13 @@ void init_gdtidt(void) {
   }
   load_idtr(LIMIT_IDT, ADR_IDT);
 
-  set_gatedesc(idt + 0x21, (int) asm_int_handler21, 2 * 8, AR_INTGATE32);
-  set_gatedesc(idt + 0x27, (int) asm_int_handler27, 2 * 8, AR_INTGATE32);
-  set_gatedesc(idt + 0x2c, (int) asm_int_handler2c, 2 * 8, AR_INTGATE32);
+  set_gatedesc(idt + 0x21, (int)asm_int_handler21, 2 * 8, AR_INTGATE32);
+  set_gatedesc(idt + 0x27, (int)asm_int_handler27, 2 * 8, AR_INTGATE32);
+  set_gatedesc(idt + 0x2c, (int)asm_int_handler2c, 2 * 8, AR_INTGATE32);
 }
 
-void set_segmdesc(struct SegmentDescriptor *sd, unsigned int limit, int base, int ar) {
+void set_segmdesc(struct SegmentDescriptor *sd, unsigned int limit, int base,
+                  int ar) {
   if (limit > 0xfffff) {
     ar |= 0x8000; // G_bit = 1
     limit /= 0x1000;

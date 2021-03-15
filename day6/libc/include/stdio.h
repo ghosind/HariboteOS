@@ -4,7 +4,7 @@
 #include <stdarg.h>
 
 #ifndef NULL
-#define NULL ((void *) 0)
+#define NULL ((void *)0)
 #endif // NULL
 
 int sprintf(char *s, const char *format, ...);

@@ -2,20 +2,26 @@ ifndef GCCPREFIX
 GCCPREFIX :=
 endif
 
-AS		:= nasm
-CC		:= $(GCCPREFIX)gcc
-LD		:= $(GCCPREFIX)ld
+AS	:= nasm
+CC	:= $(GCCPREFIX)gcc
+LD	:= $(GCCPREFIX)ld
 OBJCOPY	:= $(GCCPREFIX)objcopy
-CFLAGS	:= -Wall -m32 -I ./include -I ./libc/include -ffunction-sections
 QEMU	:= qemu-system-i386
 
-L_OBJS  := libc/stdio/stdio.bin
-K_OBJS	:= asmhead.bin bootpack.bin io.bin pm.bin hankaku.bin desctbl.bin \
-		graphic.bin int.bin inthandler.bin
-SYS		:= haribote.sys
-IMG		:= haribote.img
+CFLAGS += -Wall -Wno-format -Wno-unused
+CFLAGS += -std=gnu99 -static -m32
+CFLAGS += -I ./include -I ./libc/include
+CFLAGS += -ffunction-sections -nostdlib -nostdinc -fno-builtin -ffreestanding
 
-QEMU_FLAGS := -device virtio-keyboard-pci -device virtio-mouse-pci -no-reboot
+QEMU_FLAGS 	+= -no-reboot -d in_asm
+
+# C Library Objects
+L_OBJS  := libc/stdio/stdio.bin
+# Kernel Objects
+K_OBJS	:= bootpack.bin io.bin pm.bin hankaku.bin desctbl.bin graphic.bin \
+		int.bin inthandler.bin
+SYS	:= haribote.sys
+IMG	:= haribote.img
 
 ifdef DEBUG
 QEMU_FLAGS += -gdb tcp::1234 -S
@@ -25,14 +31,21 @@ endif
 ipl.bin:
 	$(AS) -f bin ipl.asm -o ipl.bin -l ipl.lst
 
+asmhead.bin:
+	$(AS) -f bin asmhead.asm -o asmhead.bin -l asmhead.lst
+
 %.bin: %.asm
 	$(AS) -f elf $< -o $@ -l $(subst .asm,.lst,$<)
 
 %.bin: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-haribote.sys: ${K_OBJS} ${L_OBJS}
-	$(LD) -m elf_i386 --oformat binary -o haribote.sys -T haribote.ld $^
+kernel.sys: ${K_OBJS} ${L_OBJS}
+	$(LD) -m elf_i386 --oformat binary -o kernel.sys -T kernel.ld $^
+
+haribote.sys: asmhead.bin kernel.sys
+	cat asmhead.bin > haribote.sys
+	cat kernel.sys >> haribote.sys
 
 image: ipl.bin haribote.sys
 	dd if=/dev/zero of=$(IMG) bs=512 count=2880
