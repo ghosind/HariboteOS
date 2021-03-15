@@ -6,15 +6,15 @@
 void init_palette(void);
 void set_palette(int start, int end, unsigned char *rgb);
 void box_fill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0,
-    int x1, int y1);
+               int x1, int y1);
 void init_screen(unsigned char *vram, int x, int y);
 void put_font8(unsigned char *vram, int xsize, int x, int y, char c,
-    char *font);
+               char *font);
 void put_fonts8_asc(unsigned char *vram, int xsize, int x, int y, char c,
-    char *s);
+                    char *s);
 void init_mouse_cursor8(char *mouse, char bc);
 void put_block8_8(unsigned char *vram, int vxsize, int pxsize, int pysize,
-    int px0, int py0, char *buf, int bxsize);
+                  int px0, int py0, char *buf, int bxsize);
 
 #define COL8_000000 0
 #define COL8_FF0000 1
@@ -53,7 +53,7 @@ struct GateDescriptor {
 
 void init_gdtidt(void);
 void set_segmdesc(struct SegmentDescriptor *sd, unsigned int limit, int base,
-    int ar);
+                  int ar);
 void set_gatedesc(struct GateDescriptor *gd, int offset, int selector, int ar);
 
 int main(void) {
@@ -71,10 +71,10 @@ int main(void) {
   put_block8_8(binfo->vram, binfo->scrnx, 16, 16, mx, my, mcursor, 16);
 
   put_fonts8_asc(binfo->vram, binfo->scrnx, 8, 8, COL8_FFFFFF, "ABC 123");
-  put_fonts8_asc(binfo->vram, binfo->scrnx, 31, 31,
-      COL8_000000, "Haribote OS.");
-  put_fonts8_asc(binfo->vram, binfo->scrnx, 30, 30,
-      COL8_FFFFFF, "Haribote OS.");
+  put_fonts8_asc(binfo->vram, binfo->scrnx, 31, 31, COL8_000000,
+                 "Haribote OS.");
+  put_fonts8_asc(binfo->vram, binfo->scrnx, 30, 30, COL8_FFFFFF,
+                 "Haribote OS.");
 
   sprintf(s, "scrnx = %d", binfo->scrnx);
   put_fonts8_asc(binfo->vram, binfo->scrnx, 16, 64, COL8_FFFFFF, s);
@@ -126,7 +126,7 @@ void set_palette(int start, int end, unsigned char *rgb) {
 }
 
 void box_fill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0,
-    int x1, int y1) {
+               int x1, int y1) {
   for (int y = y0; y <= y1; y++) {
     for (int x = x0; x <= x1; x++) {
       vram[y * xsize + x] = c;
@@ -154,7 +154,7 @@ void init_screen(unsigned char *vram, int x, int y) {
 }
 
 void put_font8(unsigned char *vram, int xsize, int x, int y, char c,
-    char *font) {
+               char *font) {
   unsigned char *p;
   char d;
 
@@ -197,7 +197,7 @@ void put_font8(unsigned char *vram, int xsize, int x, int y, char c,
 }
 
 void put_fonts8_asc(unsigned char *vram, int xsize, int x, int y, char c,
-    char *s) {
+                    char *s) {
   extern char hankaku[4096];
 
   for (; *s != '\0'; s++) {
@@ -243,7 +243,7 @@ void init_mouse_cursor8(char *mouse, char bc) {
 }
 
 void put_block8_8(unsigned char *vram, int vxsize, int pxsize, int pysize,
-    int px0, int py0, char *buf, int bxsize) {
+                  int px0, int py0, char *buf, int bxsize) {
   for (int y = 0; y < pysize; y++) {
     for (int x = 0; x < pxsize; x++) {
       vram[(py0 + y) * vxsize + (px0 + x)] = buf[y * bxsize + x];
@@ -270,7 +270,7 @@ void init_gdtidt(void) {
 }
 
 void set_segmdesc(struct SegmentDescriptor *sd, unsigned int limit, int base,
-    int ar) {
+                  int ar) {
   if (limit > 0xfffff) {
     ar |= 0x8000; // G_bit = 1
     limit /= 0x1000;
@@ -284,8 +284,7 @@ void set_segmdesc(struct SegmentDescriptor *sd, unsigned int limit, int base,
   sd->base_high = (base >> 24) & 0xff;
 }
 
-void set_gatedesc(struct GateDescriptor *gd, int offset, int selector,
-    int ar) {
+void set_gatedesc(struct GateDescriptor *gd, int offset, int selector, int ar) {
   gd->offset_low = offset & 0xffff;
   gd->selector = selector;
   gd->dw_count = (ar >> 8) & 0xff;

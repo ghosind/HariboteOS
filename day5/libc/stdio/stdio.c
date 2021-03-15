@@ -6,8 +6,8 @@ struct SprintBuf {
   int count;
 };
 
-void printnum(void (*fputch)(char, void *), void *data,
-    unsigned long num, int base) {
+void printnum(void (*fputch)(char, void *), void *data, unsigned long num,
+              int base) {
   if (num >= base) {
     printnum(fputch, data, num / base, base);
   }
@@ -16,7 +16,7 @@ void printnum(void (*fputch)(char, void *), void *data,
 }
 
 void vprintfmt(void (*fputch)(char, void *), void *data, const char *fmt,
-    va_list ap) {
+               va_list ap) {
   int ch;
   unsigned long long num;
   char *str;
