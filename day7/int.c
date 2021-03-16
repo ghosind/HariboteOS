@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 #include "bootpack.h"
+#include "fifo.h"
 #include "graphic.h"
 #include "int.h"
 #include "io.h"
@@ -25,15 +26,10 @@ void init_pic(void) {
 }
 
 void int_handler21(int *esp) {
-  struct BootInfo *binfo = (struct BootInfo *) ADR_BOOTINFO;
-  unsigned char s[4];
-
   io_out8(PIC0_OCW2, 0x61); // 通知PIC，IRQ-1已经安装完毕
   unsigned char data = io_in8(PORT_KEYDAT);
 
-  sprintf(s, "%02X", data);
-  box_fill8(binfo->vram, binfo->scrnx, COL8_008484, 0, 16, 15, 31);
-  put_fonts8_asc(binfo->vram, binfo->scrnx, 0, 16, COL8_FFFFFF, s);
+  fifo8_put(&keyfifo, data);
 }
 
 void int_handler2c(int *esp) {
