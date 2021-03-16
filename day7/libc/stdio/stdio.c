@@ -7,17 +7,25 @@ struct SprintBuf {
 };
 
 void printnum(void (*fputch)(char, void *), void *data, unsigned long num,
-              int base) {
+              int base, int width, int pad, int uppercase) {
   if (num >= base) {
-    printnum(fputch, data, num / base, base);
+    printnum(fputch, data, num / base, base, width - 1, pad, uppercase);
+  } else {
+    while (--width > 0) {
+      fputch(pad, data);
+    }
   }
 
-  fputch("0123456789abcdef"[num % base], data);
+  if (uppercase) {
+    fputch("0123456789ABCDEF"[num % base], data);
+  } else {
+    fputch("0123456789abcdef"[num % base], data);
+  }
 }
 
 void vprintfmt(void (*fputch)(char, void *), void *data, const char *fmt,
                va_list ap) {
-  int ch;
+  int ch, pad, width;
   unsigned long num;
   char *str;
 
@@ -30,7 +38,31 @@ void vprintfmt(void (*fputch)(char, void *), void *data, const char *fmt,
     }
 
     num = 0;
+    pad = 0;
+    width = 0;
+  reswitch:
     switch (ch = *fmt++) {
+    case '0':
+      pad = '0';
+      goto reswitch;
+
+    case '1':
+    case '2':
+    case '3':
+    case '4':
+    case '5':
+    case '6':
+    case '7':
+    case '8':
+    case '9':
+      for (width = 0;; ++fmt) {
+        width = width * 10 + ch - '0';
+        ch = *fmt;
+        if (ch < '0' || ch > '9')
+          break;
+      }
+      goto reswitch;
+
     case 'c':
       fputch(va_arg(ap, int), data);
       break;
@@ -41,14 +73,14 @@ void vprintfmt(void (*fputch)(char, void *), void *data, const char *fmt,
         fputch('-', data);
         num = -(long)num;
       }
-      printnum(fputch, data, num, 10);
+      printnum(fputch, data, num, 10, width, pad, 0);
       break;
 
     case 'p':
       fputch('0', data);
       fputch('x', data);
       num = (unsigned long)va_arg(ap, void *);
-      printnum(fputch, data, num, 16);
+      printnum(fputch, data, num, 16, width, pad, 0);
       break;
 
     case 's':
@@ -63,8 +95,13 @@ void vprintfmt(void (*fputch)(char, void *), void *data, const char *fmt,
       break;
 
     case 'x':
-      num = va_arg(ap, unsigned long);
-      printnum(fputch, data, num, 16);
+      num = va_arg(ap, unsigned int);
+      printnum(fputch, data, num, 16, width, pad, 0);
+      break;
+
+    case 'X':
+      num = va_arg(ap, unsigned int);
+      printnum(fputch, data, num, 16, width, pad, 1);
       break;
 
     case '%':
