@@ -1,7 +1,5 @@
 #include "fifo.h"
 
-struct FIFO8 keyfifo;
-
 void fifo8_init(struct FIFO8 *fifo, int size, unsigned char *buf) {
   fifo->size = size;
   fifo->buf = buf;

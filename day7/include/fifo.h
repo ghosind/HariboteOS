@@ -9,8 +9,6 @@ struct FIFO8 {
   int next_r, next_w;
 };
 
-extern struct FIFO8 keyfifo;
-
 void fifo8_init(struct FIFO8 *fifo, int size, unsigned char *buf);
 int fifo8_put(struct FIFO8 *fifo, unsigned char data);
 int fifo8_get(struct FIFO8 *fifo);
