@@ -6,28 +6,42 @@ struct SprintBuf {
   int count;
 };
 
+struct PrintNumAttr {
+  int base;
+  int width;
+  int pad;
+  int uppercase;
+  int negative;
+};
+
 void printnum(void (*fputch)(char, void *), void *data, unsigned long num,
-              int base, int width, int pad, int uppercase) {
-  if (num >= base) {
-    printnum(fputch, data, num / base, base, width - 1, pad, uppercase);
+              struct PrintNumAttr attr) {
+  if (num >= attr.base) {
+    attr.width -= 1;
+    printnum(fputch, data, num / attr.base, attr);
   } else {
-    while (--width > 0) {
-      fputch(pad, data);
+    while (--attr.width > attr.negative) {
+      fputch(attr.pad, data);
+    }
+
+    if (attr.negative) {
+      fputch('-', data);
     }
   }
 
-  if (uppercase) {
-    fputch("0123456789ABCDEF"[num % base], data);
+  if (attr.uppercase) {
+    fputch("0123456789ABCDEF"[num % attr.base], data);
   } else {
-    fputch("0123456789abcdef"[num % base], data);
+    fputch("0123456789abcdef"[num % attr.base], data);
   }
 }
 
 void vprintfmt(void (*fputch)(char, void *), void *data, const char *fmt,
                va_list ap) {
-  int ch, pad, width;
+  int ch;
   unsigned long num;
   char *str;
+  struct PrintNumAttr attr;
 
   while (1) {
     while ((ch = *fmt++) != '%') {
@@ -38,12 +52,15 @@ void vprintfmt(void (*fputch)(char, void *), void *data, const char *fmt,
     }
 
     num = 0;
-    pad = 0;
-    width = 0;
+    attr.base = 0;
+    attr.pad = ' ';
+    attr.width = 0;
+    attr.negative = 0;
+    attr.uppercase = 0;
   reswitch:
     switch (ch = *fmt++) {
     case '0':
-      pad = '0';
+      attr.pad = '0';
       goto reswitch;
 
     case '1':
@@ -55,8 +72,8 @@ void vprintfmt(void (*fputch)(char, void *), void *data, const char *fmt,
     case '7':
     case '8':
     case '9':
-      for (width = 0;; ++fmt) {
-        width = width * 10 + ch - '0';
+      for (attr.width = 0;; ++fmt) {
+        attr.width = attr.width * 10 + ch - '0';
         ch = *fmt;
         if (ch < '0' || ch > '9')
           break;
@@ -70,17 +87,19 @@ void vprintfmt(void (*fputch)(char, void *), void *data, const char *fmt,
     case 'd':
       num = va_arg(ap, int);
       if ((long)num < 0) {
-        fputch('-', data);
+        attr.negative = 1;
         num = -(long)num;
       }
-      printnum(fputch, data, num, 10, width, pad, 0);
+      attr.base = 10;
+      printnum(fputch, data, num, attr);
       break;
 
     case 'p':
       fputch('0', data);
       fputch('x', data);
       num = (unsigned long)va_arg(ap, void *);
-      printnum(fputch, data, num, 16, width, pad, 0);
+      attr.base = 16;
+      printnum(fputch, data, num, attr);
       break;
 
     case 's':
@@ -96,12 +115,15 @@ void vprintfmt(void (*fputch)(char, void *), void *data, const char *fmt,
 
     case 'x':
       num = va_arg(ap, unsigned int);
-      printnum(fputch, data, num, 16, width, pad, 0);
+      attr.base = 16;
+      printnum(fputch, data, num, attr);
       break;
 
     case 'X':
       num = va_arg(ap, unsigned int);
-      printnum(fputch, data, num, 16, width, pad, 1);
+      attr.base = 16;
+      attr.uppercase = 1;
+      printnum(fputch, data, num, attr);
       break;
 
     case '%':
