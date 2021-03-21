@@ -12,9 +12,11 @@
 
 int main(void) {
   struct BootInfo *binfo = (struct BootInfo *)ADR_BOOTINFO;
+  struct MemMan *memman = (struct MemMan *)MEMMAN_ADDR;
+  struct MouseDec mdec;
   char s[40], mcursor[256];
   unsigned char data;
-  struct MouseDec mdec;
+  unsigned int memtotal;
 
   init_gdtidt();
   init_pic(); // GDT/IDT完成初始化，开放CPU中断
@@ -41,9 +43,14 @@ int main(void) {
 
   enable_mouse(&mdec);
 
-  data = memtest(0x00400000, 0xbfffffff) / (1024 * 1024);
-	sprintf(s, "memory %dMB", data);
-	put_fonts8_asc(binfo->vram, binfo->scrnx, 0, 32, COL8_FFFFFF, s);
+  memtotal = memtest(0x00400000, 0xbfffffff);
+  memman_init(memman);
+  memman_free(memman, 0x00001000, 0x0009e000); // 0x00001000 ~ 0x0009efff
+  memman_free(memman, 0x00400000, memtotal - 0x00400000);
+
+  sprintf(s, "memory %dMB, free: %dKB", memtotal / (1024 * 1024),
+          memman_total(memman) / 1024);
+  put_fonts8_asc(binfo->vram, binfo->scrnx, 0, 32, COL8_FFFFFF, s);
 
   for (;;) {
     io_cli();
