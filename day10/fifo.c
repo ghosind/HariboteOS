@@ -36,6 +36,4 @@ int fifo8_get(struct FIFO8 *fifo) {
   return data;
 }
 
-int fifo8_status(struct FIFO8 *fifo) {
-  return fifo->size - fifo->free;
-}
+int fifo8_status(struct FIFO8 *fifo) { return fifo->size - fifo->free; }

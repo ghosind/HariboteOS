@@ -1,7 +1,7 @@
-#include "fifo.h"
-#include "io.h"
-#include "int.h"
 #include "keyboard.h"
+#include "fifo.h"
+#include "int.h"
+#include "io.h"
 
 struct FIFO8 keyfifo;
 unsigned char keybuf[KEY_FIFO_BUF_SIZE];

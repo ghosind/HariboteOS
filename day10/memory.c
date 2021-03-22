@@ -67,10 +67,10 @@ unsigned int memtest_sub(unsigned int start, unsigned int end) {
 }
 
 void memman_init(struct MemMan *man) {
-  man->frees = 0; // 可用信息数目
+  man->frees = 0;    // 可用信息数目
   man->maxfrees = 0; // 用于观察可用状况：frees的最大值
   man->lostsize = 0; // 释放失败的内存的大小总和
-  man->losts = 0; // 释放失败次数
+  man->losts = 0;    // 释放失败次数
 }
 
 /**
@@ -82,7 +82,7 @@ unsigned int memman_total(struct MemMan *man) {
   for (i = 0; i < man->frees; i++) {
     t += man->free[i].size;
   }
-  
+
   return t;
 }
 

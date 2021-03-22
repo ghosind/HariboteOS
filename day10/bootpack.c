@@ -9,6 +9,7 @@
 #include "keyboard.h"
 #include "memory.h"
 #include "mouse.h"
+#include "sheet.h"
 
 int main(void) {
   struct BootInfo *binfo = (struct BootInfo *)ADR_BOOTINFO;
@@ -17,6 +18,9 @@ int main(void) {
   char s[40], mcursor[256];
   unsigned char data;
   unsigned int memtotal;
+  struct Shtctl *shtctl;
+  struct Sheet *sht_back, *sht_mouse;
+  unsigned char *buf_back, buf_mouse[256];
 
   init_gdtidt();
   init_pic(); // GDT/IDT完成初始化，开放CPU中断
@@ -30,17 +34,6 @@ int main(void) {
   io_out8(PIC1_IMR, 0xef); // 开放鼠标中断
 
   init_keyboard();
-
-  init_palette();
-  init_screen8(binfo->vram, binfo->scrnx, binfo->scrny);
-
-  int mx = (binfo->scrnx - 16) / 2;
-  int my = (binfo->scrny - 28 - 16) / 2;
-  init_mouse_cursor8(mcursor, COL8_008484);
-  put_block8_8(binfo->vram, binfo->scrnx, 16, 16, mx, my, mcursor, 16);
-  sprintf(s, "(%d, %d)", mx, my);
-  put_fonts8_asc(binfo->vram, binfo->scrnx, 0, 0, COL8_FFFFFF, s);
-
   enable_mouse(&mdec);
 
   memtotal = memtest(0x00400000, 0xbfffffff);
@@ -48,9 +41,29 @@ int main(void) {
   memman_free(memman, 0x00001000, 0x0009e000); // 0x00001000 ~ 0x0009efff
   memman_free(memman, 0x00400000, memtotal - 0x00400000);
 
+  init_palette();
+  shtctl = shtctl_init(memman, binfo->vram, binfo->scrnx, binfo->scrny);
+  sht_back = sheet_alloc(shtctl);
+  sht_mouse = sheet_alloc(shtctl);
+  buf_back =
+      (unsigned char *)memman_alloc_4k(memman, binfo->scrnx * binfo->scrny);
+  sheet_setbuf(sht_back, buf_back, binfo->scrnx, binfo->scrny,
+               -1);                               // 没有透明色
+  sheet_setbuf(sht_mouse, buf_mouse, 16, 16, 99); // 透明色号99
+  init_screen8(buf_back, binfo->scrnx, binfo->scrny);
+  init_mouse_cursor8(buf_mouse, 99); // 背景色号99
+  sheet_slide(shtctl, sht_mouse, 0, 0);
+  int mx = (binfo->scrnx - 16) / 2; // 按在画面中央来计算坐标
+  int my = (binfo->scrny - 28 - 16) / 2;
+  sheet_slide(shtctl, sht_mouse, mx, my);
+  sheet_updown(shtctl, sht_back, 0);
+  sheet_updown(shtctl, sht_mouse, 1);
+  sprintf(s, "(%d, %d)", mx, my);
+  put_fonts8_asc(buf_back, binfo->scrnx, 0, 0, COL8_FFFFFF, s);
   sprintf(s, "memory %dMB, free: %dKB", memtotal / (1024 * 1024),
           memman_total(memman) / 1024);
-  put_fonts8_asc(binfo->vram, binfo->scrnx, 0, 32, COL8_FFFFFF, s);
+  put_fonts8_asc(buf_back, binfo->scrnx, 0, 32, COL8_FFFFFF, s);
+  sheet_refresh(shtctl);
 
   for (;;) {
     io_cli();
@@ -62,8 +75,9 @@ int main(void) {
 
         io_sti();
         sprintf(s, "%02X", data);
-        box_fill8(binfo->vram, binfo->scrnx, COL8_008484, 0, 16, 15, 31);
-        put_fonts8_asc(binfo->vram, binfo->scrnx, 0, 16, COL8_FFFFFF, s);
+        box_fill8(buf_back, binfo->scrnx, COL8_008484, 0, 16, 15, 31);
+        put_fonts8_asc(buf_back, binfo->scrnx, 0, 16, COL8_FFFFFF, s);
+        sheet_refresh(shtctl);
       } else if (fifo8_status(&mousefifo)) {
         data = (unsigned char)fifo8_get(&mousefifo);
 
@@ -84,12 +98,11 @@ int main(void) {
             s[2] = 'C';
           }
 
-          box_fill8(binfo->vram, binfo->scrnx, COL8_008484, 32, 16,
+          box_fill8(buf_back, binfo->scrnx, COL8_008484, 32, 16,
                     32 + 15 * 8 - 1, 31);
-          put_fonts8_asc(binfo->vram, binfo->scrnx, 32, 16, COL8_FFFFFF, s);
-          box_fill8(binfo->vram, binfo->scrnx, COL8_008484, mx, my, mx + 15,
-                    my + 15);
+          put_fonts8_asc(buf_back, binfo->scrnx, 32, 16, COL8_FFFFFF, s);
 
+          // 移动光标
           mx += mdec.x;
           my += mdec.y;
 
@@ -107,12 +120,11 @@ int main(void) {
           }
 
           sprintf(s, "(%3d, %3d)", mx, my);
-          box_fill8(binfo->vram, binfo->scrnx, COL8_008484, 0, 0, 79,
+          box_fill8(buf_back, binfo->scrnx, COL8_008484, 0, 0, 79,
                     15); // 隐藏坐标
-          put_fonts8_asc(binfo->vram, binfo->scrnx, 0, 0, COL8_FFFFFF,
-                         s); // 显示坐标
-          put_block8_8(binfo->vram, binfo->scrnx, 16, 16, mx, my, mcursor,
-                       16); // 描画鼠标
+          put_fonts8_asc(buf_back, binfo->scrnx, 0, 0, COL8_FFFFFF,
+                         s);                      // 显示坐标
+          sheet_slide(shtctl, sht_mouse, mx, my); // 包含sheet_refresh
         }
       }
     }
