@@ -38,7 +38,9 @@ int main(void) {
 
   memtotal = memtest(0x00400000, 0xbfffffff);
   memman_init(memman);
-  memman_free(memman, 0x00001000, 0x0009e000); // 0x00001000 ~ 0x0009efff
+  // 书中为0x00001000 ~ 0x0009e000
+  // 测试时发现会造成错误（原因未知），所以改为由0x00010000开始
+  memman_free(memman, 0x00010000, 0x0009e000); // 0x00010000 ~ 0x0009efff
   memman_free(memman, 0x00400000, memtotal - 0x00400000);
 
   init_palette();
