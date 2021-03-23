@@ -10,6 +10,7 @@
 #include "memory.h"
 #include "mouse.h"
 #include "sheet.h"
+#include "window.h"
 
 int main(void) {
   struct BootInfo *binfo = (struct BootInfo *)ADR_BOOTINFO;
@@ -19,8 +20,8 @@ int main(void) {
   unsigned char data;
   unsigned int memtotal;
   struct Shtctl *shtctl;
-  struct Sheet *sht_back, *sht_mouse;
-  unsigned char *buf_back, buf_mouse[256];
+  struct Sheet *sht_back, *sht_mouse, *sht_win;
+  unsigned char *buf_back, buf_mouse[256], *buf_win;
 
   init_gdtidt();
   init_pic(); // GDT/IDT完成初始化，开放CPU中断
@@ -47,19 +48,27 @@ int main(void) {
   shtctl = shtctl_init(memman, binfo->vram, binfo->scrnx, binfo->scrny);
   sht_back = sheet_alloc(shtctl);
   sht_mouse = sheet_alloc(shtctl);
+  sht_win = sheet_alloc(shtctl);
   buf_back =
       (unsigned char *)memman_alloc_4k(memman, binfo->scrnx * binfo->scrny);
+  buf_win = (unsigned char *) memman_alloc_4k(memman, 160 * 68);
   sheet_setbuf(sht_back, buf_back, binfo->scrnx, binfo->scrny,
                -1);                               // 没有透明色
   sheet_setbuf(sht_mouse, buf_mouse, 16, 16, 99); // 透明色号99
+  sheet_setbuf(sht_win, buf_win, 160, 68, -1); // 没有透明色
   init_screen8(buf_back, binfo->scrnx, binfo->scrny);
   init_mouse_cursor8(buf_mouse, 99); // 背景色号99
+  make_window8(buf_win, 160, 68, "window");
+  put_fonts8_asc(buf_win, 160, 24, 28, COL8_000000, "Welcome to");
+  put_fonts8_asc(buf_win, 160, 24, 44, COL8_000000, "Haribote-OS!");
   sheet_slide(sht_back, 0, 0);
   int mx = (binfo->scrnx - 16) / 2; // 按在画面中央来计算坐标
   int my = (binfo->scrny - 28 - 16) / 2;
   sheet_slide(sht_mouse, mx, my);
+  sheet_slide(sht_win, 80, 72);
   sheet_updown(sht_back, 0);
-  sheet_updown(sht_mouse, 1);
+  sheet_updown(sht_win, 1);
+  sheet_updown(sht_mouse, 2);
   sprintf(s, "(%3d, %3d)", mx, my);
   put_fonts8_asc(buf_back, binfo->scrnx, 0, 0, COL8_FFFFFF, s);
   sprintf(s, "memory %dMB, free: %dKB", memtotal / (1024 * 1024),
