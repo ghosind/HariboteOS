@@ -52,13 +52,13 @@ int main(void) {
   sheet_setbuf(sht_mouse, buf_mouse, 16, 16, 99); // 透明色号99
   init_screen8(buf_back, binfo->scrnx, binfo->scrny);
   init_mouse_cursor8(buf_mouse, 99); // 背景色号99
-  sheet_slide(shtctl, sht_mouse, 0, 0);
+  sheet_slide(shtctl, sht_back, 0, 0);
   int mx = (binfo->scrnx - 16) / 2; // 按在画面中央来计算坐标
   int my = (binfo->scrny - 28 - 16) / 2;
   sheet_slide(shtctl, sht_mouse, mx, my);
   sheet_updown(shtctl, sht_back, 0);
   sheet_updown(shtctl, sht_mouse, 1);
-  sprintf(s, "(%d, %d)", mx, my);
+  sprintf(s, "(%3d, %3d)", mx, my);
   put_fonts8_asc(buf_back, binfo->scrnx, 0, 0, COL8_FFFFFF, s);
   sprintf(s, "memory %dMB, free: %dKB", memtotal / (1024 * 1024),
           memman_total(memman) / 1024);

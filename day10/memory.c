@@ -90,12 +90,10 @@ unsigned int memman_total(struct MemMan *man) {
  * 分配
  */
 unsigned int memman_alloc(struct MemMan *man, unsigned int size) {
-  unsigned int i, a;
-
-  for (i = 0; i < man->frees; i++) {
+  for (unsigned int i = 0; i < man->frees; i++) {
     if (man->free[i].size >= size) {
       // 找到了足够大的内存
-      a = man->free[i].addr;
+      unsigned int a = man->free[i].addr;
       man->free[i].addr += size;
       man->free[i].size -= size;
 

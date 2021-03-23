@@ -8,7 +8,7 @@ struct Shtctl *shtctl_init(struct MemMan *memman, unsigned char *vram,
   struct Shtctl *ctl =
       (struct Shtctl *)memman_alloc_4k(memman, sizeof(struct Shtctl));
   if (!ctl) {
-    goto err;
+    return NULL;
   }
 
   ctl->vram = vram;
@@ -20,7 +20,6 @@ struct Shtctl *shtctl_init(struct MemMan *memman, unsigned char *vram,
     ctl->sheets0[i].flags = 0; // 标记为未使用
   }
 
-err:
   return ctl;
 }
 
