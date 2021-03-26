@@ -37,6 +37,9 @@ int main(void) {
   io_out8(PIC0_IMR, 0xf8); // 开放PIT、PIC1以及键盘中断
   io_out8(PIC1_IMR, 0xef); // 开放鼠标中断
 
+  fifo8_init(&timerfifo, TIMER_FIFO_BUF_SIZE, timerbuf);
+  set_timer(1000, &timerfifo, 1);
+
   init_keyboard();
   enable_mouse(&mdec);
 
@@ -85,7 +88,7 @@ int main(void) {
     sheet_refresh(sht_win, 40, 28, 120, 44);
 
     io_cli();
-    if (fifo8_status(&keyfifo) + fifo8_status(&mousefifo) == 0) {
+    if (fifo8_status(&keyfifo) + fifo8_status(&mousefifo) + fifo8_status(&timerfifo) == 0) {
       io_stihlt();
     } else {
       if (fifo8_status(&keyfifo)) {
@@ -145,6 +148,11 @@ int main(void) {
                          s);                      // 显示坐标
           sheet_refresh(sht_back, 0, 0, 80, 16);
           sheet_slide(sht_mouse, mx, my);
+        } else if (fifo8_status(&timerfifo)) {
+          data = fifo8_get(&timerfifo);
+          io_sti();
+          put_fonts8_asc(buf_back, binfo->scrnx, 0, 64, COL8_FFFFFF, "10[sec]");
+          sheet_refresh(sht_back, 0, 64, 56, 80);
         }
       }
     }
