@@ -148,12 +148,12 @@ int main(void) {
                          s);                      // 显示坐标
           sheet_refresh(sht_back, 0, 0, 80, 16);
           sheet_slide(sht_mouse, mx, my);
-        } else if (fifo8_status(&timerfifo)) {
-          data = fifo8_get(&timerfifo);
-          io_sti();
-          put_fonts8_asc(buf_back, binfo->scrnx, 0, 64, COL8_FFFFFF, "10[sec]");
-          sheet_refresh(sht_back, 0, 64, 56, 80);
         }
+      } else if (fifo8_status(&timerfifo)) {
+        data = fifo8_get(&timerfifo);
+        io_sti();
+        put_fonts8_asc(buf_back, binfo->scrnx, 0, 64, COL8_FFFFFF, "10[sec]");
+        sheet_refresh(sht_back, 0, 64, 56, 80);
       }
     }
   }
