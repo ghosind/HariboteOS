@@ -1,43 +1,57 @@
+#include <stdio.h>
+
 #include "int.h"
 #include "io.h"
 #include "timer.h"
 
 struct TimerCtl timerctl;
 
-struct FIFO8 timerfifo;
-
-unsigned char timerbuf[TIMER_FIFO_BUF_SIZE];
-
 void init_pit(void) {
   io_out8(PIT_CTRL, 0x34);
   io_out8(PIT_CNT0, 0x9c);
   io_out8(PIT_CNT0, 0x2e);
   timerctl.count = 0;
-  timerctl.timeout = 0;
+  for (int i = 0; i < MAX_TIMER; i++) {
+    timerctl.timer[i].flags = 0;
+  }
 }
 
-void set_timer(unsigned int timeout, struct FIFO8 *fifo, unsigned char data) {
-  int eflags;
+struct Timer *timer_alloc(void) {
+  for (int i = 0; i < MAX_TIMER; i++) {
+    if (timerctl.timer[i].flags == 0) {
+      timerctl.timer[i].flags = TIMER_FLAGS_ALLOC;
+      return &timerctl.timer[i];
+    }
+  }
 
-  eflags = io_load_eflags();
-  io_cli();
+  return NULL;
+}
 
-  timerctl.timeout = timeout;
-  timerctl.fifo = fifo;
-  timerctl.data = data;
+void timer_free(struct Timer *timer) {
+  timer->flags = 0;
+}
 
-  io_store_eflags(eflags);
+void timer_init(struct Timer *timer, struct FIFO8 *fifo, unsigned char data) {
+  timer->fifo = fifo;
+  timer->data = data;
+}
+
+void timer_set_timer(struct Timer *timer, unsigned int timeout) {
+  timer->timeout = timeout;
+  timer->flags = TIMER_FLAGS_USING;
 }
 
 void int_handler20(int *esp) {
   io_out8(PIC0_OCW2, 0x60); // 接收IRQ-00信号通知PIC
   timerctl.count++;
 
-  if (timerctl.timeout > 0) {
-    // 如果设置了超时
-    timerctl.timeout--;
-    if (timerctl.timeout == 0) {
-      fifo8_put(timerctl.fifo, timerctl.data);
+  for (int i = 0; i < MAX_TIMER; i++) {
+    if (timerctl.timer[i].flags == TIMER_FLAGS_USING) {
+      timerctl.timer[i].timeout--;
+      if (timerctl.timer[i].timeout == 0) {
+        timerctl.timer[i].flags = TIMER_FLAGS_ALLOC;
+        fifo8_put(timerctl.timer[i].fifo, timerctl.timer[i].data);
+      }
     }
   }
 }
