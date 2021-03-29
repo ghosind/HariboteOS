@@ -20,8 +20,9 @@ struct Timer {
 };
 
 struct TimerCtl {
-  unsigned int count;
-  struct Timer timer[MAX_TIMER];
+  unsigned int count, next, using;
+  struct Timer *timers[MAX_TIMER];
+  struct Timer timers0[MAX_TIMER];
 };
 
 extern struct TimerCtl timerctl;
