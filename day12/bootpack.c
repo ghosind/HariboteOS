@@ -23,6 +23,9 @@ int main(void) {
   struct Shtctl *shtctl;
   struct Sheet *sht_back, *sht_mouse, *sht_win;
   unsigned char *buf_back, buf_mouse[256], *buf_win;
+  struct FIFO8 timerfifo, timerfifo2, timerfifo3;
+  unsigned char timerbuf[8], timerbuf2[8], timerbuf3[8];
+  struct Timer *timer, *timer2, *timer3;
 
   init_gdtidt();
   init_pic(); // GDT/IDT完成初始化，开放CPU中断
@@ -38,7 +41,17 @@ int main(void) {
   io_out8(PIC1_IMR, 0xef); // 开放鼠标中断
 
   fifo8_init(&timerfifo, TIMER_FIFO_BUF_SIZE, timerbuf);
-  set_timer(1000, &timerfifo, 1);
+  timer = timer_alloc();
+  timer_init(timer, &timerfifo, 1);
+  timer_set_timer(timer, 1000);
+  fifo8_init(&timerfifo2, TIMER_FIFO_BUF_SIZE, timerbuf2);
+  timer2 = timer_alloc();
+  timer_init(timer2, &timerfifo2, 1);
+  timer_set_timer(timer2, 300);
+  fifo8_init(&timerfifo3, TIMER_FIFO_BUF_SIZE, timerbuf3);
+  timer3 = timer_alloc();
+  timer_init(timer3, &timerfifo3, 1);
+  timer_set_timer(timer3, 50);
 
   init_keyboard();
   enable_mouse(&mdec);
@@ -57,11 +70,11 @@ int main(void) {
   sht_win = sheet_alloc(shtctl);
   buf_back =
       (unsigned char *)memman_alloc_4k(memman, binfo->scrnx * binfo->scrny);
-  buf_win = (unsigned char *) memman_alloc_4k(memman, 160 * 52);
+  buf_win = (unsigned char *)memman_alloc_4k(memman, 160 * 52);
   sheet_setbuf(sht_back, buf_back, binfo->scrnx, binfo->scrny,
                -1);                               // 没有透明色
   sheet_setbuf(sht_mouse, buf_mouse, 16, 16, 99); // 透明色号99
-  sheet_setbuf(sht_win, buf_win, 160, 52, -1); // 没有透明色
+  sheet_setbuf(sht_win, buf_win, 160, 52, -1);    // 没有透明色
   init_screen8(buf_back, binfo->scrnx, binfo->scrny);
   init_mouse_cursor8(buf_mouse, 99); // 背景色号99
   make_window8(buf_win, 160, 52, "counter");
@@ -88,7 +101,9 @@ int main(void) {
     sheet_refresh(sht_win, 40, 28, 120, 44);
 
     io_cli();
-    if (fifo8_status(&keyfifo) + fifo8_status(&mousefifo) + fifo8_status(&timerfifo) == 0) {
+    if (fifo8_status(&keyfifo) + fifo8_status(&mousefifo) +
+            fifo8_status(&timerfifo) + fifo8_status(&timerfifo2) +
+            fifo8_status(&timerfifo3) == 0) {
       io_stihlt();
     } else {
       if (fifo8_status(&keyfifo)) {
@@ -145,7 +160,7 @@ int main(void) {
           box_fill8(buf_back, binfo->scrnx, COL8_008484, 0, 0, 79,
                     15); // 隐藏坐标
           put_fonts8_asc(buf_back, binfo->scrnx, 0, 0, COL8_FFFFFF,
-                         s);                      // 显示坐标
+                         s); // 显示坐标
           sheet_refresh(sht_back, 0, 0, 80, 16);
           sheet_slide(sht_mouse, mx, my);
         }
@@ -154,6 +169,23 @@ int main(void) {
         io_sti();
         put_fonts8_asc(buf_back, binfo->scrnx, 0, 64, COL8_FFFFFF, "10[sec]");
         sheet_refresh(sht_back, 0, 64, 56, 80);
+      } else if (fifo8_status(&timerfifo2)) {
+        data = fifo8_get(&timerfifo2);
+        io_sti();
+        put_fonts8_asc(buf_back, binfo->scrnx, 0, 80, COL8_FFFFFF, "3[sec]");
+        sheet_refresh(sht_back, 0, 64, 48, 96);
+      } else if (fifo8_status(&timerfifo3)) {
+        data = fifo8_get(&timerfifo3);
+        io_sti();
+        if (data) {
+          timer_init(timer3, &timerfifo3, 0);
+          box_fill8(buf_back, binfo->scrnx, COL8_FFFFFF, 8, 96, 15, 111);
+        } else {
+          timer_init(timer3, &timerfifo3, 1);
+          box_fill8(buf_back, binfo->scrnx, COL8_008484, 8, 96, 15, 111);
+        }
+        timer_set_timer(timer3, 50);
+        sheet_refresh(sht_back, 8, 96, 16, 112);
       }
     }
   }
