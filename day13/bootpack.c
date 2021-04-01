@@ -23,8 +23,8 @@ int main(void) {
   struct Shtctl *shtctl;
   struct Sheet *sht_back, *sht_mouse, *sht_win;
   unsigned char *buf_back, buf_mouse[256], *buf_win;
-  struct FIFO8 timerfifo, timerfifo2, timerfifo3;
-  unsigned char timerbuf[8], timerbuf2[8], timerbuf3[8];
+  struct FIFO8 timerfifo;
+  unsigned char timerbuf[8];
   struct Timer *timer, *timer2, *timer3;
 
   init_gdtidt();
@@ -42,15 +42,13 @@ int main(void) {
 
   fifo8_init(&timerfifo, TIMER_FIFO_BUF_SIZE, timerbuf);
   timer = timer_alloc();
-  timer_init(timer, &timerfifo, 1);
+  timer_init(timer, &timerfifo, 10);
   timer_set_timer(timer, 1000);
-  fifo8_init(&timerfifo2, TIMER_FIFO_BUF_SIZE, timerbuf2);
   timer2 = timer_alloc();
-  timer_init(timer2, &timerfifo2, 1);
+  timer_init(timer2, &timerfifo, 3);
   timer_set_timer(timer2, 300);
-  fifo8_init(&timerfifo3, TIMER_FIFO_BUF_SIZE, timerbuf3);
   timer3 = timer_alloc();
-  timer_init(timer3, &timerfifo3, 1);
+  timer_init(timer3, &timerfifo, 1);
   timer_set_timer(timer3, 50);
 
   init_keyboard();
@@ -99,8 +97,7 @@ int main(void) {
 
     io_cli();
     if (fifo8_status(&keyfifo) + fifo8_status(&mousefifo) +
-            fifo8_status(&timerfifo) + fifo8_status(&timerfifo2) +
-            fifo8_status(&timerfifo3) == 0) {
+            fifo8_status(&timerfifo) == 0) {
       io_stihlt();
     } else {
       if (fifo8_status(&keyfifo)) {
@@ -155,25 +152,25 @@ int main(void) {
       } else if (fifo8_status(&timerfifo)) {
         data = fifo8_get(&timerfifo);
         io_sti();
-        put_fonts8_asc(buf_back, binfo->scrnx, 0, 64, COL8_FFFFFF, "10[sec]");
-        sheet_refresh(sht_back, 0, 64, 56, 80);
-      } else if (fifo8_status(&timerfifo2)) {
-        data = fifo8_get(&timerfifo2);
-        io_sti();
-        put_fonts8_asc(buf_back, binfo->scrnx, 0, 80, COL8_FFFFFF, "3[sec]");
-        sheet_refresh(sht_back, 0, 64, 48, 96);
-      } else if (fifo8_status(&timerfifo3)) {
-        data = fifo8_get(&timerfifo3);
-        io_sti();
-        if (data) {
-          timer_init(timer3, &timerfifo3, 0);
-          box_fill8(buf_back, binfo->scrnx, COL8_FFFFFF, 8, 96, 15, 111);
+
+        if (data == 10) {
+          put_fonts8_asc_sht(sht_back, 0, 64, COL8_FFFFFF, COL8_008484,
+                             "10[sec]", 7);
+        } else if (data == 3) {
+          put_fonts8_asc_sht(sht_back, 0, 80, COL8_FFFFFF, COL8_008484,
+                             "3[sec]", 6);
         } else {
-          timer_init(timer3, &timerfifo3, 1);
-          box_fill8(buf_back, binfo->scrnx, COL8_008484, 8, 96, 15, 111);
+          if (data != 0) {
+            timer_init(timer3, &timerfifo, 0);
+            box_fill8(buf_back, binfo->scrnx, COL8_FFFFFF, 8, 96, 15, 111);
+          } else {
+            timer_init(timer3, &timerfifo, 1);
+            box_fill8(buf_back, binfo->scrnx, COL8_008484, 8, 96, 15, 111);
+          }
+
+          timer_set_timer(timer3, 50);
+          sheet_refresh(sht_back, 8, 96, 16, 112);
         }
-        timer_set_timer(timer3, 50);
-        sheet_refresh(sht_back, 8, 96, 16, 112);
       }
     }
   }
