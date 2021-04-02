@@ -4,10 +4,13 @@
 #include "io.h"
 #include "keyboard.h"
 
-struct FIFO8 mousefifo;
-unsigned char mousebuf[MOUSE_FIFO_BUF_SIZE];
+struct FIFO32 *mousefifo;
+int mousedata0;
 
-void enable_mouse(struct MouseDec *mdec) {
+void enable_mouse(struct FIFO32 *fifo, int data0, struct MouseDec *mdec) {
+  mousefifo = fifo;
+  mousedata0 = data0;
+
   wait_KBC_sendready();
   io_out8(PORT_KEYCMD, KEYCMD_SENDTO_MOUSE);
   wait_KBC_sendready();
@@ -63,7 +66,7 @@ int mouse_decode(struct MouseDec *mdec, unsigned char dat) {
 void int_handler2c(int *esp) {
   io_out8(PIC1_OCW2, 0x64); // 通知PIC1 IRQ-12的受理已经完成
   io_out8(PIC0_OCW2, 0x62); // 通知PIC0 IRQ-02的受理已经完成
-  unsigned char data = io_in8(PORT_KEYDAT);
+  int data = io_in8(PORT_KEYDAT);
 
-  fifo8_put(&mousefifo, data);
+  fifo32_put(mousefifo, data + mousedata0);
 }

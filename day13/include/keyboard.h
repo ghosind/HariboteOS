@@ -11,13 +11,8 @@
 #define KEYCMD_WRITE_MODE 0x60
 #define KBC_MODE 0x47
 
-#define KEY_FIFO_BUF_SIZE 32
-
-extern struct FIFO8 keyfifo;
-extern unsigned char keybuf[KEY_FIFO_BUF_SIZE];
-
 void wait_KBC_sendready(void);
-void init_keyboard(void);
+void init_keyboard(struct FIFO32 *fifo, int data0);
 
 void int_handler21(int *esp);
 

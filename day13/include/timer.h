@@ -10,13 +10,12 @@
 #define TIMER_FLAGS_USING 2 // 定时器运行中
 
 #define MAX_TIMER 500
-#define TIMER_FIFO_BUF_SIZE 8
 
 struct Timer {
   unsigned int flags;
   unsigned int timeout;
-  struct FIFO8 *fifo;
-  unsigned char data;
+  struct FIFO32 *fifo;
+  int data;
 };
 
 struct TimerCtl {
@@ -30,7 +29,7 @@ extern struct TimerCtl timerctl;
 void init_pit(void);
 struct Timer *timer_alloc(void);
 void timer_free(struct Timer *timer);
-void timer_init(struct Timer *timer, struct FIFO8 *fifo, unsigned char data);
+void timer_init(struct Timer *timer, struct FIFO32 *fifo, int data);
 void timer_set_timer(struct Timer *timer, unsigned int timeout);
 
 void int_handler20(int *esp);
