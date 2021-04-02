@@ -10,12 +10,20 @@ void init_pit(void) {
   io_out8(PIT_CTRL, 0x34);
   io_out8(PIT_CNT0, 0x9c);
   io_out8(PIT_CNT0, 0x2e);
-  timerctl.count = 0;
-  timerctl.next = 0xffffffff;
-  timerctl.using = 0;
+
   for (int i = 0; i < MAX_TIMER; i++) {
     timerctl.timers0[i].flags = 0;
   }
+
+  struct Timer *t = timer_alloc();
+  t->timeout = 0xffffffff;
+  t->flags = TIMER_FLAGS_USING;
+  t->next = NULL;
+
+  timerctl.count = 0;
+  timerctl.t0 = t;
+  timerctl.next = 0xffffffff;
+  timerctl.using = 1;
 }
 
 struct Timer *timer_alloc(void) {
@@ -29,9 +37,7 @@ struct Timer *timer_alloc(void) {
   return NULL;
 }
 
-void timer_free(struct Timer *timer) {
-  timer->flags = 0;
-}
+void timer_free(struct Timer *timer) { timer->flags = 0; }
 
 void timer_init(struct Timer *timer, struct FIFO32 *fifo, int data) {
   timer->fifo = fifo;
@@ -39,7 +45,8 @@ void timer_init(struct Timer *timer, struct FIFO32 *fifo, int data) {
 }
 
 void timer_set_timer(struct Timer *timer, unsigned int timeout) {
-  int eflags, i, j;
+  int eflags;
+  struct Timer *t, *s;
 
   timer->timeout = timeout + timerctl.count;
   timer->flags = TIMER_FLAGS_USING;
@@ -47,28 +54,32 @@ void timer_set_timer(struct Timer *timer, unsigned int timeout) {
   eflags = io_load_eflags();
   io_cli();
 
-  for (i = 0; i < timerctl.using; i++) {
-    if (timerctl.timers[i]->timeout >= timer->timeout) {
-      break;
+  timerctl.using ++;
+
+  t = timerctl.t0;
+  if (timer->timeout <= t->timeout) {
+    timerctl.t0 = timer;
+    timer->next = t;
+    timerctl.next = timer->timeout;
+    io_store_eflags(eflags);
+    return;
+  }
+
+  // 搜索插入未知
+  for (;;) {
+    s = t;
+    t = t->next;
+
+    if (timer->timeout <= t->timeout) {
+      s->next = timer;
+      timer->next = t;
+      io_store_eflags(eflags);
+      return;
     }
   }
-
-  // i后全部后移一位
-  for (j = timerctl.using; j > i; j--) {
-    timerctl.timers[j] = timerctl.timers[j - 1];
-  }
-
-  timerctl.using++;
-  // 插入到空位上
-  timerctl.timers[i] = timer;
-  timerctl.next = timerctl.timers[0]->timeout;
-  
-  io_store_eflags(eflags);
 }
 
 void int_handler20(int *esp) {
-  int i, j;
-
   io_out8(PIC0_OCW2, 0x60); // 接收IRQ-00信号通知PIC
   timerctl.count++;
 
@@ -76,26 +87,19 @@ void int_handler20(int *esp) {
     return;
   }
 
-  for (i = 0; i < timerctl.using; i++) {
+  struct Timer *timer = timerctl.t0;
+  for (;;) {
     // timers的定时器都处于动作中，所以不确认flags
-    if (timerctl.timers[i]->timeout > timerctl.count) {
+    if (timer->timeout > timerctl.count) {
       break;
     }
 
     // 超时
-    timerctl.timers[i]->flags = TIMER_FLAGS_ALLOC;
-    fifo32_put(timerctl.timers[i]->fifo, timerctl.timers[i]->data);
+    timer->flags = TIMER_FLAGS_ALLOC;
+    fifo32_put(timer->fifo, timer->data);
+    timer = timer->next;
   }
 
-  // 正好有i个定时器超时了，其余的进行移位
-  timerctl.using -= i;
-  for (j = 0; j < timerctl.using; j++) {
-    timerctl.timers[j] = timerctl.timers[i + j];
-  }
-
-  if (timerctl.using > 0) {
-    timerctl.next = timerctl.timers[0]->timeout;
-  } else {
-    timerctl.next = 0xffffffff;
-  }
+  timerctl.t0 = timer;
+  timerctl.next = timerctl.t0->timeout;
 }
