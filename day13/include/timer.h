@@ -20,7 +20,7 @@ struct Timer {
 };
 
 struct TimerCtl {
-  unsigned int count, next, using;
+  unsigned int count, next;
   struct Timer *t0;
   struct Timer timers0[MAX_TIMER];
 };

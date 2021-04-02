@@ -23,7 +23,6 @@ void init_pit(void) {
   timerctl.count = 0;
   timerctl.t0 = t;
   timerctl.next = 0xffffffff;
-  timerctl.using = 1;
 }
 
 struct Timer *timer_alloc(void) {
@@ -53,8 +52,6 @@ void timer_set_timer(struct Timer *timer, unsigned int timeout) {
 
   eflags = io_load_eflags();
   io_cli();
-
-  timerctl.using ++;
 
   t = timerctl.t0;
   if (timer->timeout <= t->timeout) {
