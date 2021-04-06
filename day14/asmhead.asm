@@ -1,5 +1,12 @@
 ; haribote-os
 
+VBEMODE EQU   0x105
+; 0x100:  640 *  400 * 8bit
+; 0x101:  640 *  480 * 8bit
+; 0x103:  800 *  600 * 8bit
+; 0x105: 1024 *  768 * 8bit
+; 0x107: 1280 * 1024 * 8bit
+
 BOTPAK  EQU   0x00280000  ; 加载bootpack
 DSKCAC  EQU   0x00100000  ; 磁盘缓存的位置
 DSKCAC0 EQU   0x00008000  ; 实模式磁盘缓存的位置
@@ -18,15 +25,59 @@ VRAM    EQU   0x0ff8      ; 图像缓冲区的起始位置
   [BITS 16]
 entry:
 ; 设置屏幕模式
-  MOV   BX, 0x4101        ; VBE的640*480*8bit彩色
+; 确定VBE是否存在
+  MOV   AX, 0x9000
+  MOV   ES, AX
+  MOV   DI, 0
+  MOV   AX, 0x4f00
+  INT   0x10
+  CMP   AX, 0x004f
+  JNE   scrn320
+
+; 检查VBE的版本
+  MOV   AX, [ES:DI+4]
+  CMP   AX, 0x0200
+  JB    scrn320
+
+; 取得画面模式信息
+  MOV   CX, VBEMODE
+  MOV   AX, 0x4f01
+  INT   0x10
+  CMP   AX, 0x004f
+  JNE   scrn320
+
+; 画面模式的确认
+  CMP   BYTE [ES:DI+0x19], 8
+  JNE   scrn320
+  CMP   BYTE [ES:DI+0x1b], 4
+  JNE   scrn320
+  MOV   AX, [ES:DI+0x00]
+  AND   AX, 0x0080
+  JZ    scrn320
+
+; 画面模式的切换
+  MOV   BX, VBEMODE+0x4000
   MOV   AX, 0x4f02
   INT   0x10
+  MOV   BYTE [VMODE], 8   ; 记下画面模式
+  MOV   AX, [ES:DI+0x12]
+  MOV   [SCRNX], AX
+  MOV   AX, [ES:DI+0x14]
+  MOV   [SCRNY], AX
+  MOV   EAX, [ES:DI+0x28]
+  MOV   [VRAM], EAX
+  JMP   keystatus
 
-  MOV   BYTE [VMODE], 8   ; 屏幕的模式
-  MOV   WORD [SCRNX], 640
-  MOV   WORD [SCRNY], 480
-  MOV   DWORD [VRAM], 0xe0000000
+scrn320:
+  MOV   AL, 0x13          ; VGA图，320*200*8bit彩色
+  MOV   AH, 0x00
+  INT   0x10
+  MOV   BYTE [VMODE], 8    ; 记下画面模式
+  MOV   WORD [SCRNX], 320
+  MOV   WORD [SCRNY], 200
+  MOV   DWORD [VRAM], 0x000a0000
 
+keystatus:
 ; 用BIOS取得键盘上各种LED指示灯的状态
   MOV   AH, 0x02
   INT   0x16              ; 键盘BIOS
