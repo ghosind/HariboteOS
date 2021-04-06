@@ -73,6 +73,9 @@ int main(void) {
   init_screen8(buf_back, binfo->scrnx, binfo->scrny);
   init_mouse_cursor8(buf_mouse, 99); // 背景色号99
   make_window8(buf_win, 160, 52, "counter");
+  make_textbox8(sht_win, 8, 28, 144, 16, COL8_FFFFFF);
+  int cursor_x = 8;
+  int cursor_c = COL8_FFFFFF;
   sheet_slide(sht_back, 0, 0);
   int mx = (binfo->scrnx - 16) / 2; // 按在画面中央来计算坐标
   int my = (binfo->scrny - 28 - 16) / 2;
@@ -101,11 +104,21 @@ int main(void) {
         sprintf(s, "%02X", data - 256);
         put_fonts8_asc_sht(sht_back, 0, 16, COL8_FFFFFF, COL8_008484, s, 2);
         if (data < 0x54 + 256) {
-          if (keytable[data - 256] != 0) {
+          if (keytable[data - 256] && cursor_x < 144) {
+            // 一般字符
             s[0] = keytable[data - 256];
             s[1] = '\0';
-            put_fonts8_asc_sht(sht_win, 40, 28, COL8_000000, COL8_C6C6C6, s, 1);
+            put_fonts8_asc_sht(sht_win, cursor_x, 28, COL8_000000, COL8_FFFFFF, s, 1);
+            cursor_x += 8;
           }
+          if (data == 256 + 0x0e && cursor_x > 8) {
+            // 退格键
+            // 用空格键把光标消去后，后移一次光标
+            put_fonts8_asc_sht(sht_win, cursor_x, 28, COL8_000000, COL8_FFFFFF, " ", 1);
+            cursor_x -= 8;
+          }
+          box_fill8(sht_win->buf, sht_win->bxsize, cursor_c, cursor_x, 28, cursor_x + 7, 43);
+          sheet_refresh(sht_win, cursor_x, 28, cursor_x + 8, 44);
         }
       } else if (512 <= data && data <= 767) {
         // 鼠标数据
@@ -143,6 +156,11 @@ int main(void) {
           sprintf(s, "(%3d, %3d)", mx, my);
           put_fonts8_asc_sht(sht_back, 0, 0, COL8_FFFFFF, COL8_008484, s, 10);
           sheet_slide(sht_mouse, mx, my);
+
+          if (mdec.btn & 0x01) {
+            // 按下左键，移动sht_win
+            sheet_slide(sht_win, mx - 80, my - 8);
+          }
         }
       } else if (data == 10) {
         put_fonts8_asc_sht(sht_back, 0, 64, COL8_FFFFFF, COL8_008484, "10[sec]",
@@ -150,16 +168,18 @@ int main(void) {
       } else if (data == 3) {
         put_fonts8_asc_sht(sht_back, 0, 80, COL8_FFFFFF, COL8_008484, "3[sec]",
                            6);
-      } else if (data == 1) {
-        timer_init(timer3, &fifo, 0);
-        box_fill8(buf_back, binfo->scrnx, COL8_FFFFFF, 8, 96, 15, 111);
+      } else if (data <= 1) {
+        if (data) {
+          timer_init(timer3, &fifo, 0);
+          cursor_c = COL8_000000;
+        } else {
+          timer_init(timer3, &fifo, 1);
+          cursor_c = COL8_FFFFFF;
+        }
+
         timer_set_timer(timer3, 50);
-        sheet_refresh(sht_back, 8, 96, 16, 112);
-      } else if (data == 0) {
-        timer_init(timer3, &fifo, 1);
-        box_fill8(buf_back, binfo->scrnx, COL8_008484, 8, 96, 15, 111);
-        timer_set_timer(timer3, 50);
-        sheet_refresh(sht_back, 8, 96, 16, 112);
+        box_fill8(sht_win->buf, sht_win->bxsize, cursor_c, cursor_x, 28, cursor_x + 7, 43);
+        sheet_refresh(sht_win, cursor_x, 28, cursor_x + 8, 44);
       }
     }
   }
