@@ -10,8 +10,32 @@
 #include "memory.h"
 #include "mouse.h"
 #include "sheet.h"
+#include "task.h"
 #include "timer.h"
 #include "window.h"
+
+void task_b_main(void) {
+  struct FIFO32 fifo;
+  int fifobuf[128];
+
+  fifo32_init(&fifo, 128, fifobuf);
+  struct Timer *timer = timer_alloc();
+  timer_init(timer, &fifo, 1);
+  timer_set_timer(timer, 500);
+
+  for (;;) {
+    io_cli();
+    if (!fifo32_status(&fifo)) {
+      io_stihlt();
+    } else {
+      int data = fifo32_get(&fifo);
+      io_sti();
+      if (data == 1) {
+        task_switch3();
+      }
+    }
+  }
+}
 
 int main(void) {
   struct BootInfo *binfo = (struct BootInfo *)ADR_BOOTINFO;
@@ -25,6 +49,8 @@ int main(void) {
   struct Timer *timer, *timer2, *timer3;
   struct FIFO32 fifo;
   int fifobuf[128], data;
+  struct TSS32 tss_a, tss_b;
+  struct SegmentDescriptor *gdt = (struct SegmentDescriptor *)ADR_GDT;
 
   init_gdtidt();
   init_pic(); // GDT/IDT完成初始化，开放CPU中断
@@ -90,6 +116,30 @@ int main(void) {
           memman_total(memman) / 1024);
   put_fonts8_asc(buf_back, binfo->scrnx, 0, 32, COL8_FFFFFF, s);
   sheet_refresh(sht_back, 0, 0, binfo->scrnx, 48);
+
+  tss_a.ldtr = 0;
+  tss_a.iomap = 0x40000000;
+  tss_b.ldtr = 0;
+  tss_b.iomap = 0x40000000;
+  set_segmdesc(gdt + 3, 103, (int) &tss_a, AR_TSS32);
+  set_segmdesc(gdt + 4, 103, (int) &tss_b, AR_TSS32);
+  int task_b_esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024;
+  tss_b.eip = (int) &task_b_main;
+  tss_b.eflags = 0x00000202; // IF = 1
+  tss_b.eax = 0;
+  tss_b.ecx = 0;
+  tss_b.edx = 0;
+  tss_b.ebx = 0;
+  tss_b.esp = task_b_esp;
+  tss_b.ebp = 0;
+  tss_b.esi = 0;
+  tss_b.edi = 0;
+  tss_b.es = 1 * 8;
+  tss_b.cs = 2 * 8;
+  tss_b.ss = 1 * 8;
+  tss_b.ds = 1 * 8;
+  tss_b.fs = 1 * 8;
+  tss_b.gs = 1 * 8;
 
   for (;;) {
     io_cli();
@@ -165,6 +215,7 @@ int main(void) {
       } else if (data == 10) {
         put_fonts8_asc_sht(sht_back, 0, 64, COL8_FFFFFF, COL8_008484, "10[sec]",
                            7);
+        task_switch4();
       } else if (data == 3) {
         put_fonts8_asc_sht(sht_back, 0, 80, COL8_FFFFFF, COL8_008484, "3[sec]",
                            6);
