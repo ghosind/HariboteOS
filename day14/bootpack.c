@@ -24,7 +24,7 @@ int main(void) {
   unsigned char *buf_back, buf_mouse[256], *buf_win;
   struct Timer *timer, *timer2, *timer3;
   struct FIFO32 fifo;
-  int fifobuf[128], data;
+  int fifobuf[128], data; 
 
   init_gdtidt();
   init_pic(); // GDT/IDT完成初始化，开放CPU中断
@@ -89,9 +89,6 @@ int main(void) {
   sheet_refresh(sht_back, 0, 0, binfo->scrnx, 48);
 
   for (;;) {
-    sprintf(s, "%010d", timerctl.count);
-    put_fonts8_asc_sht(sht_win, 40, 28, COL8_000000, COL8_C6C6C6, s, 10);
-
     io_cli();
     if (fifo32_status(&fifo) == 0) {
       io_stihlt();
@@ -103,6 +100,13 @@ int main(void) {
         // 键盘数据
         sprintf(s, "%02X", data - 256);
         put_fonts8_asc_sht(sht_back, 0, 16, COL8_FFFFFF, COL8_008484, s, 2);
+        if (data < 0x54 + 256) {
+          if (keytable[data - 256] != 0) {
+            s[0] = keytable[data - 256];
+            s[1] = '\0';
+            put_fonts8_asc_sht(sht_win, 40, 28, COL8_000000, COL8_C6C6C6, s, 1);
+          }
+        }
       } else if (512 <= data && data <= 767) {
         // 鼠标数据
         if (mouse_decode(&mdec, data - 512)) {
@@ -141,11 +145,11 @@ int main(void) {
           sheet_slide(sht_mouse, mx, my);
         }
       } else if (data == 10) {
-        put_fonts8_asc_sht(sht_back, 0, 64, COL8_FFFFFF, COL8_008484,
-                            "10[sec]", 7);
+        put_fonts8_asc_sht(sht_back, 0, 64, COL8_FFFFFF, COL8_008484, "10[sec]",
+                           7);
       } else if (data == 3) {
-        put_fonts8_asc_sht(sht_back, 0, 80, COL8_FFFFFF, COL8_008484,
-                            "3[sec]", 6);
+        put_fonts8_asc_sht(sht_back, 0, 80, COL8_FFFFFF, COL8_008484, "3[sec]",
+                           6);
       } else if (data == 1) {
         timer_init(timer3, &fifo, 0);
         box_fill8(buf_back, binfo->scrnx, COL8_FFFFFF, 8, 96, 15, 111);
