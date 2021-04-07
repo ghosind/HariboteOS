@@ -109,16 +109,19 @@ int main(void) {
             // 一般字符
             s[0] = keytable[data - 256];
             s[1] = '\0';
-            put_fonts8_asc_sht(sht_win, cursor_x, 28, COL8_000000, COL8_FFFFFF, s, 1);
+            put_fonts8_asc_sht(sht_win, cursor_x, 28, COL8_000000, COL8_FFFFFF,
+                               s, 1);
             cursor_x += 8;
           }
           if (data == 256 + 0x0e && cursor_x > 8) {
             // 退格键
             // 用空格键把光标消去后，后移一次光标
-            put_fonts8_asc_sht(sht_win, cursor_x, 28, COL8_000000, COL8_FFFFFF, " ", 1);
+            put_fonts8_asc_sht(sht_win, cursor_x, 28, COL8_000000, COL8_FFFFFF,
+                               " ", 1);
             cursor_x -= 8;
           }
-          box_fill8(sht_win->buf, sht_win->bxsize, cursor_c, cursor_x, 28, cursor_x + 7, 43);
+          box_fill8(sht_win->buf, sht_win->bxsize, cursor_c, cursor_x, 28,
+                    cursor_x + 7, 43);
           sheet_refresh(sht_win, cursor_x, 28, cursor_x + 8, 44);
         }
       } else if (512 <= data && data <= 767) {
@@ -179,7 +182,8 @@ int main(void) {
         }
 
         timer_set_timer(timer3, 50);
-        box_fill8(sht_win->buf, sht_win->bxsize, cursor_c, cursor_x, 28, cursor_x + 7, 43);
+        box_fill8(sht_win->buf, sht_win->bxsize, cursor_c, cursor_x, 28,
+                  cursor_x + 7, 43);
         sheet_refresh(sht_win, cursor_x, 28, cursor_x + 8, 44);
       }
     }
