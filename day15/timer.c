@@ -98,5 +98,5 @@ void int_handler20(int *esp) {
   }
 
   timerctl.t0 = timer;
-  timerctl.next = timerctl.t0->timeout;
+  timerctl.next = timer->timeout;
 }

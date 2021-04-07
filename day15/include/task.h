@@ -9,7 +9,7 @@ struct TSS32 {
 };
 
 void load_tr(int tr);
-void task_switch3(void);
-void task_switch4(void);
+
+void far_jmp(int eip, int cs);
 
 #endif // _TASK_H_

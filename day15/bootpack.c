@@ -14,24 +14,43 @@
 #include "timer.h"
 #include "window.h"
 
-void task_b_main(void) {
+void task_b_main(struct Sheet *sht_back) {
   struct FIFO32 fifo;
-  int fifobuf[128];
+  int fifobuf[128], count = 0, count0 = 0;
+  char s[12];
 
   fifo32_init(&fifo, 128, fifobuf);
-  struct Timer *timer = timer_alloc();
-  timer_init(timer, &fifo, 1);
-  timer_set_timer(timer, 500);
+  struct Timer *timer_ts = timer_alloc();
+  timer_init(timer_ts, &fifo, 2);
+  timer_set_timer(timer_ts, 2);
+  struct Timer *timer_put = timer_alloc();
+  timer_init(timer_put, &fifo, 1);
+  timer_set_timer(timer_put, 1);
+  struct Timer *timer_1s = timer_alloc();
+  timer_init(timer_1s, &fifo, 100);
+  timer_set_timer(timer_1s, 100);
 
   for (;;) {
+    count++;
+
     io_cli();
     if (!fifo32_status(&fifo)) {
-      io_stihlt();
+      io_sti();
     } else {
       int data = fifo32_get(&fifo);
       io_sti();
       if (data == 1) {
-        task_switch3();
+        sprintf(s, "%11d", count);
+        put_fonts8_asc_sht(sht_back, 0, 144, COL8_FFFFFF, COL8_008484, s, 11);
+        timer_set_timer(timer_put, 1);
+      } else if (data == 2) {
+        far_jmp(0, 3 * 8);
+        timer_set_timer(timer_ts, 2);
+      } else if (data == 100) {
+        sprintf(s, "%11d", count - count0);
+        put_fonts8_asc_sht(sht_back, 0, 128, COL8_FFFFFF, COL8_008484, s, 11);
+        count0 = count;
+        timer_set_timer(timer_1s, 100);
       }
     }
   }
@@ -46,7 +65,7 @@ int main(void) {
   struct Shtctl *shtctl;
   struct Sheet *sht_back, *sht_mouse, *sht_win;
   unsigned char *buf_back, buf_mouse[256], *buf_win;
-  struct Timer *timer, *timer2, *timer3;
+  struct Timer *timer, *timer2, *timer3, *timer_ts;
   struct FIFO32 fifo;
   int fifobuf[128], data;
   struct TSS32 tss_a, tss_b;
@@ -76,6 +95,9 @@ int main(void) {
   timer3 = timer_alloc();
   timer_init(timer3, &fifo, 1);
   timer_set_timer(timer3, 50);
+  timer_ts = timer_alloc();
+  timer_init(timer_ts, &fifo, 2);
+  timer_set_timer(timer_ts, 2);
 
   memtotal = memtest(0x00400000, 0xbfffffff);
   memman_init(memman);
@@ -125,7 +147,7 @@ int main(void) {
   set_segmdesc(gdt + 3, 103, (int)&tss_a, AR_TSS32);
   set_segmdesc(gdt + 4, 103, (int)&tss_b, AR_TSS32);
   load_tr(3 * 8);
-  int task_b_esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024;
+  int task_b_esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 - 8;
   tss_b.eip = (int)&task_b_main;
   tss_b.eflags = 0x00000202; // IF = 1
   tss_b.eax = 0;
@@ -142,6 +164,7 @@ int main(void) {
   tss_b.ds = 1 * 8;
   tss_b.fs = 1 * 8;
   tss_b.gs = 1 * 8;
+  *((int *) (task_b_esp + 4)) = (int) sht_back;
 
   for (;;) {
     io_cli();
@@ -151,7 +174,10 @@ int main(void) {
       data = fifo32_get(&fifo);
       io_sti();
 
-      if (256 <= data && data <= 511) {
+      if (data == 2) {
+        far_jmp(0, 4 * 8);
+        timer_set_timer(timer_ts, 2);
+      } else if (256 <= data && data <= 511) {
         // 键盘数据
         sprintf(s, "%02X", data - 256);
         put_fonts8_asc_sht(sht_back, 0, 16, COL8_FFFFFF, COL8_008484, s, 2);
@@ -220,7 +246,6 @@ int main(void) {
       } else if (data == 10) {
         put_fonts8_asc_sht(sht_back, 0, 64, COL8_FFFFFF, COL8_008484, "10[sec]",
                            7);
-        task_switch4();
       } else if (data == 3) {
         put_fonts8_asc_sht(sht_back, 0, 80, COL8_FFFFFF, COL8_008484, "3[sec]",
                            6);
