@@ -20,7 +20,7 @@ L_OBJS  := libc/stdio/stdio.bin
 # Kernel Objects
 K_OBJS	:= bootpack.bin io.bin pm.bin hankaku.bin desctbl.bin graphic.bin \
 		int.bin inthandler.bin fifo.bin keyboard.bin mouse.bin \
-		memory.bin sheet.bin window.bin timer.bin task.bin
+		memory.bin sheet.bin window.bin timer.bin task.bin mtask.bin
 SYS	:= haribote.sys
 IMG	:= haribote.img
 

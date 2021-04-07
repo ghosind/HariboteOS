@@ -2,6 +2,7 @@
 
 #include "int.h"
 #include "io.h"
+#include "task.h"
 #include "timer.h"
 
 struct TimerCtl timerctl;
@@ -77,6 +78,8 @@ void timer_set_timer(struct Timer *timer, unsigned int timeout) {
 }
 
 void int_handler20(int *esp) {
+  char ts = 0;
+
   io_out8(PIC0_OCW2, 0x60); // 接收IRQ-00信号通知PIC
   timerctl.count++;
 
@@ -93,10 +96,20 @@ void int_handler20(int *esp) {
 
     // 超时
     timer->flags = TIMER_FLAGS_ALLOC;
-    fifo32_put(timer->fifo, timer->data);
+
+    if (timer != mt_timer) {
+      fifo32_put(timer->fifo, timer->data);
+    } else {
+      ts = 1;
+    }
+    
     timer = timer->next;
   }
 
   timerctl.t0 = timer;
   timerctl.next = timer->timeout;
+
+  if (ts) {
+    mt_task_switch();
+  }
 }
