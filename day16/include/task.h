@@ -1,8 +1,8 @@
-#include "memory.h"
-#include "timer.h"
-
 #ifndef _TASK_H_
 #define _TASK_H_
+
+#include "memory.h"
+#include "timer.h"
 
 #define MAX_TASKS 1000 // 最大任务数量
 #define TASK_GDT0 3    // 定义从GDT的几号开始分配给TSS
@@ -30,15 +30,12 @@ extern struct TaskCtl *taskctl;
 extern struct Timer *task_timer;
 
 void load_tr(int tr);
-
 void far_jmp(int eip, int cs);
-
-void mt_init(void);
-void mt_task_switch(void);
 
 struct Task *task_init(struct MemMan *memman);
 struct Task *task_alloc(void);
 void task_run(struct Task *task);
 void task_switch(void);
+void task_sleep(struct Task *task);
 
 #endif // _TASK_H_

@@ -19,7 +19,7 @@ void task_b_main(struct Sheet *sht_back) {
   int fifobuf[128], count = 0, count0 = 0;
   char s[12];
 
-  fifo32_init(&fifo, 128, fifobuf);
+  fifo32_init(&fifo, 128, fifobuf, NULL);
   struct Timer *timer_put = timer_alloc();
   timer_init(timer_put, &fifo, 1);
   timer_set_timer(timer_put, 1);
@@ -68,7 +68,7 @@ int main(void) {
 
   io_sti();
 
-  fifo32_init(&fifo, 128, fifobuf);
+  fifo32_init(&fifo, 128, fifobuf, NULL);
 
   init_keyboard(&fifo, 256);
   enable_mouse(&fifo, 512, &mdec);
@@ -129,7 +129,8 @@ int main(void) {
   put_fonts8_asc(buf_back, binfo->scrnx, 0, 32, COL8_FFFFFF, s);
   sheet_refresh(sht_back, 0, 0, binfo->scrnx, 48);
 
-  task_init(memman);
+  struct Task *task_a = task_init(memman);
+  fifo.task = task_a;
   struct Task *task_b = task_alloc();
   task_b->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 - 8;
   task_b->tss.eip = (int)&task_b_main;
@@ -145,7 +146,8 @@ int main(void) {
   for (;;) {
     io_cli();
     if (fifo32_status(&fifo) == 0) {
-      io_stihlt();
+      task_sleep(task_a);
+      io_sti();
     } else {
       data = fifo32_get(&fifo);
       io_sti();

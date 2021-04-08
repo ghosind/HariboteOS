@@ -79,3 +79,43 @@ void task_switch(void) {
     far_jmp(0, taskctl->tasks[taskctl->now]->sel);
   }
 }
+
+void task_sleep(struct Task *task) {
+  int i;
+  char ts = 0;
+
+  if (task->flags == 2) {
+    // 如果任务处于唤醒状态
+    if (task == taskctl->tasks[taskctl->now]) {
+      ts = 1;
+    }
+
+    // 寻找task所在的位置
+    for (i = 0; i < taskctl->running; i++) {
+      if (taskctl->tasks[i] == task) {
+        break;
+      }
+    }
+
+    taskctl->running--;
+
+    if (i < taskctl->now) {
+      taskctl->now--; // 需要移动成员
+    }
+
+    for (; i < taskctl->running; i++) {
+      taskctl->tasks[i] = taskctl->tasks[i + 1];
+    }
+
+    task->flags = 1;
+
+    if (ts) {
+      // 任务切换
+      if (taskctl->now >= taskctl->running) {
+        // 如果now的值出现异常，则需要修正
+        taskctl->now = 0;
+      }
+      far_jmp(0, taskctl->tasks[taskctl->now]->sel);
+    }
+  }
+}
