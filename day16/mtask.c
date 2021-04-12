@@ -19,15 +19,21 @@ struct Task *task_init(struct MemMan *memman) {
                  AR_TSS32);
   }
 
+  for (int i = 0; i < MAX_TASKLEVELS; i++) {
+    taskctl->level[i].running = 0;
+    taskctl->level[i].now = 0;
+  }
+
   struct Task *task = task_alloc();
-  task->flags = 2; // 活动中标志
-  taskctl->running = 1;
-  taskctl->now = 0;
-  taskctl->tasks[0] = task;
+  task->flags = 2;    // 活动中标志
+  task->priority = 2; // 0.02s
+  task->level = 0;    // 最高level
+  task_add(task);
+  task_switchsub();
   load_tr(task->sel);
 
   task_timer = timer_alloc();
-  timer_set_timer(task_timer, 2);
+  timer_set_timer(task_timer, task->priority);
 
   return task;
 }
@@ -62,60 +68,109 @@ struct Task *task_alloc(void) {
   return NULL;
 }
 
-void task_run(struct Task *task) {
-  task->flags = 2; // 活动中标志
-  taskctl->tasks[taskctl->running] = task;
-  taskctl->running++;
+void task_run(struct Task *task, int level, int priority) {
+  if (level < 0) {
+    level = task->level; // 不改变level
+  }
+
+  if (priority > 0) {
+    task->priority = priority;
+  }
+
+  if (task->flags == 2 && task->level != level) {
+    // 改变活动中的level
+    task_remove(task); // flag会变为1
+  }
+
+  if (task->flags != 2) {
+    task->level = level;
+    task_add(task);
+  }
+
+  taskctl->lv_change = 1; // 下次任务切换时检查level
 }
 
 void task_switch(void) {
-  timer_set_timer(task_timer, 2);
-  if (taskctl->running >= 2) {
-    taskctl->now++;
-    if (taskctl->now == taskctl->running) {
-      taskctl->now = 0;
-    }
+  struct TaskLevel *tl = &taskctl->level[taskctl->now_lv];
+  struct Task *now_task = tl->tasks[tl->now];
 
-    far_jmp(0, taskctl->tasks[taskctl->now]->sel);
+  tl->now++;
+  if (tl->now == tl->running) {
+    tl->now = 0;
+  }
+
+  if (taskctl->lv_change) {
+    task_switchsub();
+    tl = &taskctl->level[taskctl->now_lv];
+  }
+
+  struct Task *new_task = tl->tasks[tl->now];
+  timer_set_timer(task_timer, new_task->priority);
+  if (new_task != now_task) {
+    far_jmp(0, new_task->sel);
   }
 }
 
 void task_sleep(struct Task *task) {
-  int i;
-  char ts = 0;
-
   if (task->flags == 2) {
     // 如果任务处于唤醒状态
-    if (task == taskctl->tasks[taskctl->now]) {
-      ts = 1;
-    }
-
-    // 寻找task所在的位置
-    for (i = 0; i < taskctl->running; i++) {
-      if (taskctl->tasks[i] == task) {
-        break;
-      }
-    }
-
-    taskctl->running--;
-
-    if (i < taskctl->now) {
-      taskctl->now--; // 需要移动成员
-    }
-
-    for (; i < taskctl->running; i++) {
-      taskctl->tasks[i] = taskctl->tasks[i + 1];
-    }
-
-    task->flags = 1;
-
-    if (ts) {
-      // 任务切换
-      if (taskctl->now >= taskctl->running) {
-        // 如果now的值出现异常，则需要修正
-        taskctl->now = 0;
-      }
-      far_jmp(0, taskctl->tasks[taskctl->now]->sel);
+    struct Task *now_task = task_now();
+    task_remove(task);
+    if (task == now_task) {
+      // 如果将休眠，则进行任务切换
+      task_switchsub();
+      now_task = task_now();
+      far_jmp(0, now_task->sel);
     }
   }
+}
+
+struct Task *task_now(void) {
+  struct TaskLevel *tl = &taskctl->level[taskctl->now_lv];
+  return tl->tasks[tl->now];
+}
+
+void task_add(struct Task *task) {
+  struct TaskLevel *tl = &taskctl->level[task->level];
+  tl->tasks[tl->running] = task;
+  tl->running++;
+  task->flags = 2;
+}
+
+void task_remove(struct Task *task) {
+  struct TaskLevel *tl = &taskctl->level[task->level];
+  int i;
+
+  for (i = 0; i < tl->running; i++) {
+    if (tl->tasks[i] == task) {
+      break;
+    }
+  }
+
+  tl->running--;
+  if (i < tl->now) {
+    tl->now--; // 需要移动成员
+  }
+
+  if (tl->now >= tl->running) {
+    tl->now = 0;
+  }
+  task->flags = 1; // 休眠中
+
+  for (; i < tl->running; i++) {
+    tl->tasks[i] = tl->tasks[i + 1];
+  }
+}
+
+void task_switchsub(void) {
+  int i;
+
+  for (i = 0; i < MAX_TASKLEVELS; i++) {
+    if (taskctl->level[i].running > 0) {
+      break;
+    }
+  }
+
+  taskctl->now_lv = i;
+  taskctl->lv_change = 0;
 }

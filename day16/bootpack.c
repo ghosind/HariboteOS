@@ -34,7 +34,7 @@ void task_b_main(struct Sheet *sht_back_b) {
       int data = fifo32_get(&fifo);
       io_sti();
       if (data == 100) {
-        sprintf(s, "%11d", count - count0);
+        sprintf(s, "%11d", count);
         put_fonts8_asc_sht(sht_back_b, 24, 28, COL8_000000, COL8_C6C6C6, s, 11);
         count0 = count;
         timer_set_timer(timer_1s, 100);
@@ -84,6 +84,7 @@ int main(void) {
   shtctl = shtctl_init(memman, binfo->vram, binfo->scrnx, binfo->scrny);
   struct Task *task_a = task_init(memman);
   fifo.task = task_a;
+  task_run(task_a, 1, 0);
 
   // sht_back
   sht_back = sheet_alloc(shtctl);
@@ -110,7 +111,7 @@ int main(void) {
     task_b[i]->tss.fs = 1 * 8;
     task_b[i]->tss.gs = 1 * 8;
     *((int *)(task_b[i]->tss.esp + 4)) = (int)sht_win_b[i];
-    task_run(task_b[i]);
+    task_run(task_b[i], 2, i + 1);
   }
 
   // sht_win
