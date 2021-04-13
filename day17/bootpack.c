@@ -63,7 +63,7 @@ int main(void) {
   unsigned char *buf_back, buf_mouse[256], *buf_win, *buf_cons;
   struct Timer *timer;
   struct FIFO32 fifo;
-  int fifobuf[128], data;
+  int fifobuf[128], data, key_to = 0;
 
   init_gdtidt();
   init_pic(); // GDT/IDT完成初始化，开放CPU中断
@@ -183,6 +183,23 @@ int main(void) {
                                " ", 1);
             cursor_x -= 8;
           }
+          
+          // Tab键
+          if (data == 256 + 0x0f) {
+            if (!key_to) {
+              key_to = 1;
+              make_window_title8(buf_win, sht_win->bxsize, "task_a", 0);
+              make_window_title8(buf_cons, sht_cons->bxsize, "console", 1);
+            } else {
+              key_to = 0;
+              make_window_title8(buf_win, sht_win->bxsize, "task_a", 1);
+              make_window_title8(buf_cons, sht_cons->bxsize, "console", 0);
+            }
+
+            sheet_refresh(sht_win, 0, 0, sht_win->bxsize, 21);
+            sheet_refresh(sht_cons, 0, 0, sht_cons->bxsize, 21);
+          }
+
           box_fill8(sht_win->buf, sht_win->bxsize, cursor_c, cursor_x, 28,
                     cursor_x + 7, 43);
           sheet_refresh(sht_win, cursor_x, 28, cursor_x + 8, 44);
