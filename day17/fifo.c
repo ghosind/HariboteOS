@@ -39,7 +39,7 @@ int fifo8_get(struct FIFO8 *fifo) {
 
 int fifo8_status(struct FIFO8 *fifo) { return fifo->size - fifo->free; }
 
-void fifo32_init(struct FIFO32 *fifo, int size, int *buf, struct Task *task) {
+void fifo32_init(struct FIFO32 *fifo, int size, int *buf, void *task) {
   fifo->size = size;
   fifo->buf = buf;
   fifo->free = size;
@@ -63,9 +63,10 @@ int fifo32_put(struct FIFO32 *fifo, int data) {
   fifo->free--;
 
   if (fifo->task) {
-    if (fifo->task->flags != 2) {
+    struct Task *task = (struct Task *)fifo->task;
+    if (task->flags != 2) {
       // 如果任务处于休眠状态
-      task_run(fifo->task, -1, 0);
+      task_run(task, -1, 0);
     }
   }
 

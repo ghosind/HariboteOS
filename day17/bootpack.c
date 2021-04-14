@@ -15,39 +15,59 @@
 #include "window.h"
 
 void console_task(struct Sheet *sheet) {
-  struct FIFO32 fifo;
   struct Task *task = task_now();
-  int fifobuf[128], cursor_x = 8, cursor_c = COL8_000000;
+  int fifobuf[128], cursor_x = 16, cursor_c = COL8_000000;
+  char s[2];
 
-  fifo32_init(&fifo, 128, fifobuf, task);
+  fifo32_init(&task->fifo, 128, fifobuf, task);
 
   struct Timer *timer = timer_alloc();
-  timer_init(timer, &fifo, 1);
+  timer_init(timer, &task->fifo, 1);
   timer_set_timer(timer, 50);
+
+  put_fonts8_asc_sht(sheet, 8, 28, COL8_FFFFFF, COL8_000000, ">", 1);
 
   for (;;) {
     io_cli();
 
-    if (!fifo32_status(&fifo)) {
+    if (!fifo32_status(&task->fifo)) {
       task_sleep(task);
       io_sti();
     } else {
-      int data = fifo32_get(&fifo);
+      int data = fifo32_get(&task->fifo);
       io_sti();
       if (data <= 1) {
         if (data) {
-          timer_init(timer, &fifo, 0);
+          timer_init(timer, &task->fifo, 0);
           cursor_c = COL8_FFFFFF;
         } else {
-          timer_init(timer, &fifo, 1);
+          timer_init(timer, &task->fifo, 1);
           cursor_c = COL8_000000;
         }
 
         timer_set_timer(timer, 50);
-        box_fill8(sheet->buf, sheet->bxsize, cursor_c, cursor_x, 28,
-                  cursor_x + 7, 43);
-        sheet_refresh(sheet, cursor_x, 28, cursor_x + 8, 44);
       }
+      
+      if (data >= 256 && data <= 511) {
+        if (data == 8 + 256) {
+          // 退格键
+          if (cursor_x > 16) {
+            // 用空白擦除光标后将光标前移一位
+            put_fonts8_asc_sht(sheet, cursor_x, 28, COL8_FFFFFF, COL8_000000, " ", 1);
+            cursor_x -= 8;
+          }
+        } else {
+          if (cursor_x < 240) {
+            s[0] = data - 256;
+            s[1] = 0;
+            put_fonts8_asc_sht(sheet, cursor_x, 28, COL8_FFFFFF, COL8_000000, s, 1);
+            cursor_x += 8;
+          }
+        }
+      }
+
+      box_fill8(sheet->buf, sheet->bxsize, cursor_c, cursor_x, 28, cursor_x + 7, 43);
+      sheet_refresh(sheet, cursor_x, 28, cursor_x + 8, 44);
     }
   }
 }
@@ -63,7 +83,7 @@ int main(void) {
   unsigned char *buf_back, buf_mouse[256], *buf_win, *buf_cons;
   struct Timer *timer;
   struct FIFO32 fifo;
-  int fifobuf[128], data, key_to = 0;
+  int fifobuf[128], data, key_to = 0, key_shift = 0, key_leds = (binfo->leds >> 4) & 7;
 
   init_gdtidt();
   init_pic(); // GDT/IDT完成初始化，开放CPU中断
@@ -167,43 +187,86 @@ int main(void) {
         // 键盘数据
         sprintf(s, "%02X", data - 256);
         put_fonts8_asc_sht(sht_back, 0, 16, COL8_FFFFFF, COL8_008484, s, 2);
-        if (data < 0x54 + 256) {
-          if (keytable[data - 256] && cursor_x < 144) {
-            // 一般字符
-            s[0] = keytable[data - 256];
-            s[1] = '\0';
-            put_fonts8_asc_sht(sht_win, cursor_x, 28, COL8_000000, COL8_FFFFFF,
-                               s, 1);
-            cursor_x += 8;
-          }
-          if (data == 256 + 0x0e && cursor_x > 8) {
-            // 退格键
-            // 用空格键把光标消去后，后移一次光标
-            put_fonts8_asc_sht(sht_win, cursor_x, 28, COL8_000000, COL8_FFFFFF,
-                               " ", 1);
-            cursor_x -= 8;
-          }
-          
-          // Tab键
-          if (data == 256 + 0x0f) {
-            if (!key_to) {
-              key_to = 1;
-              make_window_title8(buf_win, sht_win->bxsize, "task_a", 0);
-              make_window_title8(buf_cons, sht_cons->bxsize, "console", 1);
-            } else {
-              key_to = 0;
-              make_window_title8(buf_win, sht_win->bxsize, "task_a", 1);
-              make_window_title8(buf_cons, sht_cons->bxsize, "console", 0);
-            }
 
-            sheet_refresh(sht_win, 0, 0, sht_win->bxsize, 21);
-            sheet_refresh(sht_cons, 0, 0, sht_cons->bxsize, 21);
-          }
+        sprintf(s, "%d", key_leds);
+        put_fonts8_asc_sht(sht_back, 0, 160, COL8_FFFFFF, COL8_008484, s, 10);
 
-          box_fill8(sht_win->buf, sht_win->bxsize, cursor_c, cursor_x, 28,
-                    cursor_x + 7, 43);
-          sheet_refresh(sht_win, cursor_x, 28, cursor_x + 8, 44);
+        if (data < 0x80 + 256) {
+          if (key_shift == 0) {
+            s[0] = keytable0[data - 256];
+          } else {
+            s[0] = keytable1[data - 256];
+          }
+        } else {
+          s[0] = 0;
         }
+
+        if ('A' <= s[0] && s[0] <= 'Z') {
+          if ((!(key_leds & 4) && !key_shift) || ((key_leds & 4) && key_shift)) {
+            s[0] += 0x20;
+          }
+        }
+
+        if (s[0]) {
+          if (!key_to) {
+            if (cursor_x < 128) {
+              // 显示一个字符之后将光标后移一位
+              s[1] = '\0';
+              put_fonts8_asc_sht(sht_win, cursor_x, 28, COL8_000000,
+                                 COL8_FFFFFF, s, 1);
+              cursor_x += 8;
+            }
+          } else {
+            fifo32_put(&task_cons->fifo, s[0] + 256);
+          }
+        }
+
+        if (data == 256 + 0x0e) {
+          // 退格键
+          if (!key_to) {
+            if (cursor_x > 8) {
+              // 用空格键把光标消去后，后移一次光标
+              put_fonts8_asc_sht(sht_win, cursor_x, 28, COL8_000000,
+                                  COL8_FFFFFF, " ", 1);
+              cursor_x -= 8;
+            }
+          } else {
+            fifo32_put(&task_cons->fifo, 8 + 256);
+          }
+        }
+
+        // Tab键
+        if (data == 256 + 0x0f) {
+          if (!key_to) {
+            key_to = 1;
+            make_window_title8(buf_win, sht_win->bxsize, "task_a", 0);
+            make_window_title8(buf_cons, sht_cons->bxsize, "console", 1);
+          } else {
+            key_to = 0;
+            make_window_title8(buf_win, sht_win->bxsize, "task_a", 1);
+            make_window_title8(buf_cons, sht_cons->bxsize, "console", 0);
+          }
+
+          sheet_refresh(sht_win, 0, 0, sht_win->bxsize, 21);
+          sheet_refresh(sht_cons, 0, 0, sht_cons->bxsize, 21);
+        }
+
+        if (data == 256 + 0x2a) {
+          key_shift |= 1;
+        }
+        if (data == 256 + 0x36) {
+          key_shift |= 2;
+        }
+        if (data == 256 + 0xaa) {
+          key_shift &= ~1;
+        }
+        if (data == 256 + 0xb6) {
+          key_shift &= ~2;
+        }
+
+        box_fill8(sht_win->buf, sht_win->bxsize, cursor_c, cursor_x, 28,
+                  cursor_x + 7, 43);
+        sheet_refresh(sht_win, cursor_x, 28, cursor_x + 8, 44);
       } else if (512 <= data && data <= 767) {
         // 鼠标数据
         if (mouse_decode(&mdec, data - 512)) {

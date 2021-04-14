@@ -17,9 +17,12 @@ struct TSS32 {
   int ldtr, iomap;
 };
 
+struct FIFO32;
+
 struct Task {
   int sel, flags; // sel用于存放GDT的编号
   int level, priority;
+  struct FIFO32 fifo;
   struct TSS32 tss;
 };
 
