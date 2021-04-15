@@ -11,6 +11,8 @@
 #define KEYCMD_WRITE_MODE 0x60
 #define KBC_MODE 0x47
 
+#define KEYCMD_LED 0xed
+
 static char keytable0[] = {
     0,   0,   '1', '2', '3', '4', '5', '6', '7', '8', '9',  '0', '-', '=',  0,
     0,   'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P',  '[', ']', 0,    0,

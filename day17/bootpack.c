@@ -82,8 +82,9 @@ int main(void) {
   struct Sheet *sht_back, *sht_mouse, *sht_win, *sht_cons;
   unsigned char *buf_back, buf_mouse[256], *buf_win, *buf_cons;
   struct Timer *timer;
-  struct FIFO32 fifo;
-  int fifobuf[128], data, key_to = 0, key_shift = 0, key_leds = (binfo->leds >> 4) & 7;
+  struct FIFO32 fifo, keycmd;
+  int fifobuf[128], keycmd_buf[32];
+  int data, key_to = 0, key_shift = 0, key_leds = (binfo->leds >> 4) & 7, keycmd_wait = -1;
 
   init_gdtidt();
   init_pic(); // GDT/IDT完成初始化，开放CPU中断
@@ -91,6 +92,7 @@ int main(void) {
   io_sti();
 
   fifo32_init(&fifo, 128, fifobuf, NULL);
+  fifo32_init(&keycmd, 32, keycmd_buf, NULL);
 
   init_keyboard(&fifo, 256);
   enable_mouse(&fifo, 512, &mdec);
@@ -174,7 +176,18 @@ int main(void) {
           memman_total(memman) / 1024);
   put_fonts8_asc_sht(sht_back, 0, 32, COL8_FFFFFF, COL8_008484, s, 40);
 
+  // 避免与键盘状态冲突
+  fifo32_put(&keycmd, KEYCMD_LED);
+  fifo32_put(&keycmd, key_leds);
+
   for (;;) {
+    if (fifo32_status(&keycmd) > 0 && keycmd_wait < 0) {
+      // 如果存在向键盘控制器发送的数据
+      keycmd_wait = fifo32_get(&keycmd);
+      wait_KBC_sendready();
+      io_out8(PORT_KEYCMD, keycmd_wait);
+    }
+
     io_cli();
     if (fifo32_status(&fifo) == 0) {
       task_sleep(task_a);
@@ -251,17 +264,49 @@ int main(void) {
           sheet_refresh(sht_cons, 0, 0, sht_cons->bxsize, 21);
         }
 
+        // 左Shift按下
         if (data == 256 + 0x2a) {
           key_shift |= 1;
         }
+        // 右Shift按下
         if (data == 256 + 0x36) {
           key_shift |= 2;
         }
+        // 左Shift释放
         if (data == 256 + 0xaa) {
           key_shift &= ~1;
         }
+        // 右Shift释放
         if (data == 256 + 0xb6) {
           key_shift &= ~2;
+        }
+
+        // CapsLock
+        if (data == 256 + 0x3a) {
+          key_leds ^= 4;
+          fifo32_put(&keycmd, KEYCMD_LED);
+          fifo32_put(&keycmd, key_leds);
+        }
+        // NumLock
+        if (data == 256 + 0x45) {
+          key_leds ^= 2;
+          fifo32_put(&keycmd, KEYCMD_LED);
+          fifo32_put(&keycmd, key_leds);
+        }
+        // ScrollLock
+        if (data == 256 + 0x46) {
+          key_leds ^= 1;
+          fifo32_put(&keycmd, KEYCMD_LED);
+          fifo32_put(&keycmd, key_leds);
+        }
+
+        // 键盘成功接收到数据
+        if (data == 256 + 0xfa) {
+          keycmd_wait = -1;
+        }
+        if (data == 256 + 0xfe) {
+          wait_KBC_sendready();
+          io_out8(PORT_KEYDAT, keycmd_wait);
         }
 
         box_fill8(sht_win->buf, sht_win->bxsize, cursor_c, cursor_x, 28,
