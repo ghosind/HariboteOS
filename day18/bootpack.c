@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 
 #include "bootpack.h"
 #include "console.h"
@@ -83,8 +84,7 @@ void console_task(struct Sheet *sheet, unsigned int memtotal) {
           cmdline[cursor_x / 8 - 2] = '\0';
           cursor_y = cons_newline(cursor_y, sheet);
 
-          if (cmdline[0] == 'm' && cmdline[1] == 'e' && cmdline[2] == 'm' &&
-              cmdline[3] == '\0') {
+          if (!strcmp(cmdline, "mem")) {
             // mem命令
             sprintf(s, "total   %dMB", memtotal / (1024 * 1024));
             put_fonts8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, s,

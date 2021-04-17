@@ -16,7 +16,7 @@ CFLAGS += -ffunction-sections -nostdlib -nostdinc -fno-builtin -ffreestanding
 QEMU_FLAGS 	+= -no-reboot -d in_asm -m size=128
 
 # C Library Objects
-L_OBJS  := libc/stdio/stdio.bin
+L_OBJS  := libc/stdio/stdio.bin libc/string/strcmp.bin
 # Kernel Objects
 K_OBJS	:= bootpack.bin io.bin pm.bin hankaku.bin desctbl.bin graphic.bin \
 		int.bin inthandler.bin fifo.bin keyboard.bin mouse.bin \
