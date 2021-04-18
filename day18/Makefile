@@ -52,7 +52,7 @@ haribote.sys: asmhead.bin kernel.sys
 image: ipl.bin haribote.sys
 	dd if=/dev/zero of=$(IMG) bs=512 count=2880
 	dd if=ipl.bin of=$(IMG) bs=512 count=1 conv=notrunc
-	dd if=haribote.sys of=$(IMG) seek=33 bs=512 conv=notrunc
+	mcopy -i $(IMG) haribote.sys ::/
 
 all: ${OBJS} haribote.sys image
 

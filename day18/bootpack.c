@@ -121,8 +121,8 @@ void console_task(struct Sheet *sheet, unsigned int memtotal) {
                     s[y] = finfo[x].name[y];
                   }
                   s[9] = finfo[x].ext[0];
-                  s[10] = finfo[x].ext[0];
-                  s[11] = finfo[x].ext[0];
+                  s[10] = finfo[x].ext[1];
+                  s[11] = finfo[x].ext[2];
                   put_fonts8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, s, 30);
                   cursor_y = cons_newline(cursor_y, sheet);
                 }
