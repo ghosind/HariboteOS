@@ -5,6 +5,7 @@
 #include "console.h"
 #include "desctbl.h"
 #include "fifo.h"
+#include "fs.h"
 #include "graphic.h"
 #include "int.h"
 #include "io.h"
@@ -21,6 +22,7 @@ void console_task(struct Sheet *sheet, unsigned int memtotal) {
   int fifobuf[128], cursor_x = 16, cursor_y = 28, cursor_c = -1;
   char s[30], cmdline[30];
   struct MemMan *memman = (struct MemMan *)MEMMAN_ADDR;
+  struct FileInfo *finfo = (struct FileInfo *) (ADR_DISKIMG + 0x002600);
 
   fifo32_init(&task->fifo, 128, fifobuf, task);
 
@@ -96,6 +98,7 @@ void console_task(struct Sheet *sheet, unsigned int memtotal) {
             cursor_y = cons_newline(cursor_y, sheet);
             cursor_y = cons_newline(cursor_y, sheet);
           } else if (!strcmp(cmdline, "cls")) {
+            // cls命令
             for (int y = 28; y < 28 + 128; y++) {
               for (int x = 8; x < 8 + 240; x++) {
                 sheet->buf[x + y * sheet->bxsize] = COL8_000000;
@@ -104,7 +107,29 @@ void console_task(struct Sheet *sheet, unsigned int memtotal) {
 
             sheet_refresh(sheet, 8, 28, 8 + 240, 28 + 128);
             cursor_y = 28;
-          } else if (cmdline[0] != '\0') {
+          } else if (!strcmp(cmdline, "dir")) {
+            // dir命令
+            for (int x = 0; x < 224; x++) {
+              if (finfo[x].name[0] == '\0') {
+                break;
+              }
+
+              if (finfo[x].name[0] != 0xe5) {
+                if (!(finfo[x].type & 0x18)) {
+                  sprintf(s, "filename.ext   %7d", finfo[x].size);
+                  for (int y = 0; y < 8; y++) {
+                    s[y] = finfo[x].name[y];
+                  }
+                  s[9] = finfo[x].ext[0];
+                  s[10] = finfo[x].ext[0];
+                  s[11] = finfo[x].ext[0];
+                  put_fonts8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, s, 30);
+                  cursor_y = cons_newline(cursor_y, sheet);
+                }
+              }
+            }
+            cursor_y = cons_newline(cursor_y, sheet);
+          } else if (strcmp(cmdline, "")) {
             put_fonts8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000,
                                "Bad command.", 12);
             cursor_y = cons_newline(cursor_y, sheet);

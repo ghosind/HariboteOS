@@ -2,12 +2,13 @@
 #define _BOOTPACK_H_
 
 #define ADR_BOOTINFO 0x00000ff0
+#define ADR_DISKIMG 0x00100000
 
-struct BootInfo{
-  char  cyls;
-  char  leds;
-  char  vmode;
-  char  reserve;
+struct BootInfo {
+  char cyls;
+  char leds;
+  char vmode;
+  char reserve;
   short scrnx;
   short scrny;
   unsigned char *vram;
