@@ -23,12 +23,15 @@ void console_task(struct Sheet *sheet, unsigned int memtotal) {
   char s[30], cmdline[30];
   struct MemMan *memman = (struct MemMan *)MEMMAN_ADDR;
   struct FileInfo *finfo = (struct FileInfo *)(ADR_DISKIMG + 0x002600);
+  int *fat = (int *)memman_alloc_4k(memman, 4 * 2880);
 
   fifo32_init(&task->fifo, 128, fifobuf, task);
 
   struct Timer *timer = timer_alloc();
   timer_init(timer, &task->fifo, 1);
   timer_set_timer(timer, 50);
+
+  file_read_fat(fat, (unsigned char *)(ADR_DISKIMG + 0x000200));
 
   put_fonts8_asc_sht(sheet, 8, 28, COL8_FFFFFF, COL8_000000, ">", 1);
 
@@ -132,33 +135,33 @@ void console_task(struct Sheet *sheet, unsigned int memtotal) {
             cursor_y = cons_newline(cursor_y, sheet);
           } else if (!strncmp(cmdline, "type ", 5)) {
             // type命令
-            int i, j;
-            for (j = 0; j < 11; j++) {
-              s[j] = ' ';
+            int x, y;
+            for (y = 0; y < 11; y++) {
+              s[y] = ' ';
             }
-            j = 0;
+            y = 0;
 
-            for (i = 5; j < 11 && cmdline[i] != '\0'; i++) {
-              if (cmdline[i] == '.' && s[j] <= 'z') {
-                j = 8;
+            for (x = 5; y < 11 && cmdline[x] != '\0'; x++) {
+              if (cmdline[x] == '.' && s[y] <= 'z') {
+                y = 8;
               } else {
-                s[j] = cmdline[i];
-                if ('a' <= s[j] && s[j] <= 'z') {
+                s[y] = cmdline[x];
+                if ('a' <= s[y] && s[y] <= 'z') {
                   // 转为大写
-                  s[j] -= 0x20;
+                  s[y] -= 0x20;
                 }
-                j++;
+                y++;
               }
             }
 
             // 寻找文件
-            for (i = 0; i < 224;) {
-              if (finfo[i].name[0] == '\0') {
+            for (x = 0; x < 224;) {
+              if (finfo[x].name[0] == '\0') {
                 break;
               }
-              if (!(finfo[i].type & 0x18)) {
-                for (j = 0; j < 11; j++) {
-                  if (finfo[i].name[j] != s[j]) {
+              if (!(finfo[x].type & 0x18)) {
+                for (y = 0; y < 11; y++) {
+                  if (finfo[x].name[y] != s[y]) {
                     goto type_next_file;
                   }
                 }
@@ -166,25 +169,48 @@ void console_task(struct Sheet *sheet, unsigned int memtotal) {
               }
 
             type_next_file:
-              i++;
+              x++;
             }
 
-            if (i < 224 && finfo[i].name[0] != '\0') {
-              j = finfo[i].size;
-              char *p =
-                  (char *)(finfo[i].clsutno * 512 + 0x003e00 + ADR_DISKIMG);
+            if (x < 224 && finfo[x].name[0] != '\0') {
+              char *p = (char *)memman_alloc_4k(memman, finfo[x].size);
+              file_load_file(finfo[x].clsutno, finfo[x].size, p, fat,
+                             (char *)(ADR_DISKIMG + 0x003e00));
               cursor_x = 8;
-              for (i = 0; i < j; i++) {
-                s[0] = p[i];
+              for (y = 0; y < finfo[x].size; y++) {
+                s[0] = p[y];
                 s[1] = '\0';
-                put_fonts8_asc_sht(sheet, cursor_x, cursor_y, COL8_FFFFFF,
-                                   COL8_000000, s, 1);
-                cursor_x += 8;
-                if (cursor_x == 8 + 240) {
+                if (s[0] == '\t') {
+                  for (;;) {
+                    put_fonts8_asc_sht(sheet, cursor_x, cursor_y, COL8_FFFFFF,
+                                       COL8_000000, " ", 1);
+                    cursor_x += 8;
+                    if (cursor_x == 8 + 240) {
+                      cursor_x = 8;
+                      cursor_y = cons_newline(cursor_y, sheet);
+                    }
+                    if (!((cursor_x - 8) & 0x1f)) {
+                      break; // 被32整除则break
+                    }
+                  }
+                } else if (s[0] == '\n') {
+                  // 换行符
                   cursor_x = 8;
                   cursor_y = cons_newline(cursor_y, sheet);
+                } else if (s[0] == '\r') {
+                  // 回车符，暂不处理
+                } else {
+                  put_fonts8_asc_sht(sheet, cursor_x, cursor_y, COL8_FFFFFF,
+                                     COL8_000000, s, 1);
+                  cursor_x += 8;
+                  if (cursor_x == 8 + 240) {
+                    cursor_x = 8;
+                    cursor_y = cons_newline(cursor_y, sheet);
+                  }
                 }
               }
+
+              memman_free_4k(memman, (int)p, finfo[x].size);
             } else {
               put_fonts8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000,
                                  "File not found.", 15);
