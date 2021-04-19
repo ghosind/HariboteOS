@@ -3,6 +3,7 @@
 
 #include "bootpack.h"
 #include "console.h"
+#include "desctbl.h"
 #include "fifo.h"
 #include "fs.h"
 #include "graphic.h"
@@ -20,6 +21,8 @@ void console_task(struct Sheet *sheet, unsigned int memtotal) {
   struct MemMan *memman = (struct MemMan *)MEMMAN_ADDR;
   struct FileInfo *finfo = (struct FileInfo *)(ADR_DISKIMG + 0x002600);
   int *fat = (int *)memman_alloc_4k(memman, 4 * 2880);
+  struct SegmentDescriptor *gdt = (struct SegmentDescriptor *)ADR_GDT;
+  int x, y;
 
   fifo32_init(&task->fifo, 128, fifobuf, task);
 
@@ -108,7 +111,7 @@ void console_task(struct Sheet *sheet, unsigned int memtotal) {
             cursor_y = 28;
           } else if (!strcmp(cmdline, "dir")) {
             // dir命令
-            for (int x = 0; x < 224; x++) {
+            for (x = 0; x < 224; x++) {
               if (finfo[x].name[0] == '\0') {
                 break;
               }
@@ -116,7 +119,7 @@ void console_task(struct Sheet *sheet, unsigned int memtotal) {
               if (finfo[x].name[0] != 0xe5) {
                 if (!(finfo[x].type & 0x18)) {
                   sprintf(s, "filename.ext   %7d", finfo[x].size);
-                  for (int y = 0; y < 8; y++) {
+                  for (y = 0; y < 8; y++) {
                     s[y] = finfo[x].name[y];
                   }
                   s[9] = finfo[x].ext[0];
@@ -131,7 +134,6 @@ void console_task(struct Sheet *sheet, unsigned int memtotal) {
             cursor_y = cons_newline(cursor_y, sheet);
           } else if (!strncmp(cmdline, "type ", 5)) {
             // type命令
-            int x, y;
             for (y = 0; y < 11; y++) {
               s[y] = ' ';
             }
@@ -213,6 +215,45 @@ void console_task(struct Sheet *sheet, unsigned int memtotal) {
               cursor_y = cons_newline(cursor_y, sheet);
             }
 
+            cursor_y = cons_newline(cursor_y, sheet);
+          } else if (!strcmp(cmdline, "hlt")) {
+            for (y = 0; y < 11; y++) {
+              s[y] = ' ';
+            }
+
+            s[0] = 'H';
+            s[1] = 'L';
+            s[2] = 'T';
+            s[8] = 'H';
+            s[9] = 'R';
+            s[10] = 'B';
+            
+            for (x = 0; x < 224; ) {
+              if (finfo[x].name[0] == '\0') {
+                break;
+              }
+              if (!(finfo[x].type & 0x18)) {
+                for (y = 0; y < 11; y++) {
+                  if (finfo[x].name[y] != s[y]) {
+                    goto hlt_next_file;
+                  }
+                }
+                break;
+              }
+              hlt_next_file:
+              x++;
+            }
+
+            if (x < 224 && finfo[x].name[0] != '\0') {
+              char *p = (char *) memman_alloc_4k(memman, finfo[x].size);
+              file_load_file(finfo[x].clsutno, finfo[x].size, p, fat, (char *)(ADR_DISKIMG + 0x003e00));
+              set_segmdesc(gdt + 1003, finfo[x].size - 1, (int) p, AR_CODE32_ER);
+              far_jmp(0, 1003 * 8);
+              memman_free_4k(memman, (int) p, finfo[x].size);
+            } else {
+              put_fonts8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000, "File not found.", 15);
+              cursor_y = cons_newline(cursor_y, sheet);
+            }
             cursor_y = cons_newline(cursor_y, sheet);
           } else if (strcmp(cmdline, "")) {
             put_fonts8_asc_sht(sheet, 8, cursor_y, COL8_FFFFFF, COL8_000000,

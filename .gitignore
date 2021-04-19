@@ -38,6 +38,7 @@
 *.x86_64
 *.hex
 *.img
+*.hrb
 
 # Debug files
 *.dSYM/
