@@ -172,7 +172,7 @@ void console_task(struct Sheet *sheet, unsigned int memtotal) {
 
             if (x < 224 && finfo[x].name[0] != '\0') {
               char *p = (char *)memman_alloc_4k(memman, finfo[x].size);
-              file_load_file(finfo[x].clsutno, finfo[x].size, p, fat,
+              file_load_file(finfo[x].clustno, finfo[x].size, p, fat,
                              (char *)(ADR_DISKIMG + 0x003e00));
               cursor_x = 8;
               for (y = 0; y < finfo[x].size; y++) {
@@ -246,7 +246,7 @@ void console_task(struct Sheet *sheet, unsigned int memtotal) {
 
             if (x < 224 && finfo[x].name[0] != '\0') {
               char *p = (char *) memman_alloc_4k(memman, finfo[x].size);
-              file_load_file(finfo[x].clsutno, finfo[x].size, p, fat, (char *)(ADR_DISKIMG + 0x003e00));
+              file_load_file(finfo[x].clustno, finfo[x].size, p, fat, (char *)(ADR_DISKIMG + 0x003e00));
               set_segmdesc(gdt + 1003, finfo[x].size - 1, (int) p, AR_CODE32_ER);
               far_jmp(0, 1003 * 8);
               memman_free_4k(memman, (int) p, finfo[x].size);

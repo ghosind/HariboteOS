@@ -4,7 +4,7 @@
 struct FileInfo {
   unsigned char name[8], ext[3], type;
   char reserve[10];
-  unsigned short time, date, clsutno;
+  unsigned short time, date, clustno;
   unsigned int size;
 };
 
