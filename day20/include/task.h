@@ -44,6 +44,7 @@ extern struct Timer *task_timer;
 
 void load_tr(int tr);
 void far_jmp(int eip, int cs);
+void far_call(int eip, int cs);
 
 struct Task *task_init(struct MemMan *memman);
 struct Task *task_alloc(void);

@@ -104,7 +104,7 @@ void cmd_hlt(struct Console *cons, int *fat) {
     file_load_file(finfo->clustno, finfo->size, p, fat,
                    (char *)(ADR_DISKIMG + 0x003e00));
     set_segmdesc(gdt + 1003, finfo->size - 1, (int)p, AR_CODE32_ER);
-    far_jmp(0, 1003 * 8);
+    far_call(0, 1003 * 8);
     memman_free_4k(memman, (int)p, finfo->size);
   } else {
     put_fonts8_asc_sht(cons->sheet, 8, cons->cur_y, COL8_FFFFFF, COL8_000000,

@@ -21,7 +21,7 @@ L_OBJS  := libc/stdio/stdio.bin libc/string/strcmp.bin libc/string/strncmp.bin
 K_OBJS	:= bootpack.bin io.bin pm.bin hankaku.bin desctbl.bin graphic.bin \
 		int.bin inthandler.bin fifo.bin keyboard.bin mouse.bin \
 		memory.bin sheet.bin window.bin timer.bin task.bin mtask.bin \
-		console.bin fs.bin command.bin
+		console.bin fs.bin command.bin console_asm.bin
 # Applications
 APPS	:= app/hlt.hrb
 SYS	:= haribote.sys

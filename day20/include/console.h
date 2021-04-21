@@ -14,4 +14,6 @@ void cons_putchar(struct Console *cons, int ch, char move);
 void cons_newline(struct Console *cons);
 void cons_run_cmd(char *cmdline, struct Console *cons, int *fat, unsigned int memtotal);
 
+void asm_cons_putchar(void);
+
 #endif // _CONSOLE_H_
