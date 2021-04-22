@@ -29,7 +29,7 @@ void console_task(struct Sheet *sheet, unsigned int memtotal) {
   cons.cur_x = 8;
   cons.cur_y = 28;
   cons.cur_c = -1;
-  *((int *) 0x0fec) = (int) &cons;
+  *((int *)0x0fec) = (int)&cons;
 
   fifo32_init(&task->fifo, 128, fifobuf, task);
 
@@ -173,6 +173,19 @@ void cons_newline(struct Console *cons) {
   cons->cur_x = 8;
 }
 
+void cons_putstr(struct Console *cons, char *s) {
+  while (*s) {
+    cons_putchar(cons, *s, 1);
+    s++;
+  }
+}
+
+void cons_putnstr(struct Console *cons, char *s, int n) {
+  for (int i = 0; i < n; i++) {
+    cons_putchar(cons, s[i], 1);
+  }
+}
+
 void cons_run_cmd(char *cmdline, struct Console *cons, int *fat,
                   unsigned int memtotal) {
   if (!strcmp(cmdline, "mem")) {
@@ -183,12 +196,9 @@ void cons_run_cmd(char *cmdline, struct Console *cons, int *fat,
     cmd_dir(cons);
   } else if (!strncmp(cmdline, "type ", 5)) {
     cmd_type(cons, fat, cmdline);
-  } else if (!strcmp(cmdline, "hlt")) {
-    cmd_hlt(cons, fat);
   } else if (strcmp(cmdline, "")) {
-    put_fonts8_asc_sht(cons->sheet, 8, cons->cur_y, COL8_FFFFFF, COL8_000000,
-                       "Bad command.", 12);
-    cons_newline(cons);
-    cons_newline(cons);
+    if (!cmd_app(cons, fat, cmdline)) {
+      cons_putstr(cons, "Bad command.\n\n");
+    }
   }
 }

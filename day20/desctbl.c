@@ -1,3 +1,4 @@
+#include "api.h"
 #include "desctbl.h"
 #include "int.h"
 #include "timer.h"
@@ -23,6 +24,7 @@ void init_gdtidt(void) {
   set_gatedesc(idt + 0x21, (int)asm_int_handler21, 2 * 8, AR_INTGATE32);
   set_gatedesc(idt + 0x27, (int)asm_int_handler27, 2 * 8, AR_INTGATE32);
   set_gatedesc(idt + 0x2c, (int)asm_int_handler2c, 2 * 8, AR_INTGATE32);
+  set_gatedesc(idt + 0x40, (int)asm_hrb_api, 2 * 8, AR_INTGATE32);
 }
 
 void set_segmdesc(struct SegmentDescriptor *sd, unsigned int limit, int base,
