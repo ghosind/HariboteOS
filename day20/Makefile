@@ -20,8 +20,8 @@ L_OBJS  := libc/stdio/stdio.bin libc/string/strcmp.bin libc/string/strncmp.bin
 # Kernel Objects
 K_OBJS	:= bootpack.bin io.bin pm.bin hankaku.bin desctbl.bin graphic.bin \
 		int.bin inthandler.bin fifo.bin keyboard.bin mouse.bin \
-		memory.bin sheet.bin window.bin timer.bin task.bin mtask.bin \
-		console.bin fs.bin command.bin api.bin api_asm.bin
+		memory.bin sheet.bin window.bin timer.bin task_asm.bin \
+		task.bin console.bin fs.bin command.bin api.bin api_asm.bin
 # Applications
 APPS	:= app/hello.hrb
 SYS	:= haribote.sys
