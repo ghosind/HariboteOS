@@ -47,8 +47,10 @@ asmhead.bin:
 %.hrb: %.asm
 	$(AS) -f bin $< -o $@  -l $(subst .asm,.lst,$<)
 
-%.hrb: %.c
-	$(CC) $(CFLAGS) $< -o $@
+app/a.hrb:
+	$(AS) -f elf app/a_asm.asm -o app/a_asm.o
+	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/a.c -o app/a.o
+	$(LD) -m elf_i386 --oformat binary -e main app/a.o app/a_asm.o -o app/a.hrb
 
 kernel.sys: ${K_OBJS} ${L_OBJS}
 	$(LD) -m elf_i386 --oformat binary -o kernel.sys -T kernel.ld $^
@@ -72,6 +74,9 @@ clean:
 	rm -rf *.lst
 	rm -rf $(IMG)
 	rm -rf **/**/*.bin
+	rm -rf app/*.hrb
+	rm -rf **/*.o
+	rm -rf **/*.lst
 
 qemu: clean all
 	$(QEMU) -fda $(IMG) $(QEMU_FLAGS)

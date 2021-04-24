@@ -1,5 +1,5 @@
-#include <api.h>
+void api_putchar(int c);
 
-void main(void) {
+__attribute__ ((far)) void main(void) {
   api_putchar('A');
 }

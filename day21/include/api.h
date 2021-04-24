@@ -7,6 +7,4 @@ void hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx,
 void asm_hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx,
                  int eax);
 
-void api_putchar(int c);
-
 #endif // _API_H_
