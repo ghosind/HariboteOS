@@ -16,3 +16,4 @@ fin:
 
 msg:
   DB    "hello", 0
+  DB    0x41, 0x53
