@@ -113,7 +113,10 @@ int cmd_app(struct Console *cons, int *fat, char *cmdline) {
                    (char *)(ADR_DISKIMG + 0x003e00));
 
     if (p[finfo->size + 6 - 2] == 0x41 && p[finfo->size + 6 - 1] == 0x53) {
-      set_segmdesc(gdt + 1003, finfo->size - 1, (int)(p + 6), AR_CODE32_ER);
+      for (int j = 0; j < finfo->size - 1; j++) {
+        p[j] = p[j + 6];
+      }
+      set_segmdesc(gdt + 1003, finfo->size - 1, (int)p, AR_CODE32_ER);
     } else {
       p[0] = 0xe8;
       p[1] = 0x01;

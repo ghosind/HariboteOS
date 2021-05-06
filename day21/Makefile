@@ -23,7 +23,7 @@ K_OBJS	:= bootpack.bin io.bin pm.bin hankaku.bin desctbl.bin graphic.bin \
 		memory.bin sheet.bin window.bin timer.bin task_asm.bin \
 		task.bin console.bin fs.bin command.bin api.bin api_asm.bin
 # Applications
-APPS	:= app/hello.hrb app/hello2.hrb app/a.hrb
+APPS	:= app/hello.hrb app/hello2.hrb app/a.hrb app/hello3.hrb
 SYS	:= haribote.sys
 IMG	:= haribote.img
 
@@ -47,10 +47,16 @@ asmhead.bin:
 %.hrb: %.asm
 	$(AS) -f bin $< -o $@  -l $(subst .asm,.lst,$<)
 
-app/a.hrb:
+app/a_asm.o:
 	$(AS) -f elf app/a_asm.asm -o app/a_asm.o
+
+app/a.hrb: app/a_asm.o
 	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/a.c -o app/a.o
 	$(LD) -m elf_i386 --oformat binary -e main app/a.o app/a_asm.o -o app/a.hrb
+
+app/hello3.hrb: app/a_asm.o
+	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/hello3.c -o app/hello3.o
+	$(LD) -m elf_i386 --oformat binary -e main app/hello3.o app/a_asm.o -o app/hello3.hrb
 
 kernel.sys: ${K_OBJS} ${L_OBJS}
 	$(LD) -m elf_i386 --oformat binary -o kernel.sys -T kernel.ld $^
