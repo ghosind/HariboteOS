@@ -12,8 +12,8 @@ put_loop:
   JMP   put_loop
 
 fin:
-  RETF
+  MOV   EDX, 4
+  INT   0x40
 
 msg:
   DB    "hello", 0
-  DB    0x41, 0x53

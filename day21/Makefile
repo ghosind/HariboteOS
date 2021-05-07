@@ -60,9 +60,9 @@ app/hello3.hrb: app/a_asm.o
 	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/hello3.c -o app/hello3.o
 	$(LD) -m elf_i386 --oformat binary -e main app/hello3.o app/a_asm.o -o app/hello3.hrb
 
-app/crack1.hrb:
+app/crack1.hrb: app/a_asm.o
 	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/crack1.c -o app/crack1.o
-	$(LD) -m elf_i386 --oformat binary -e main app/crack1.o -o app/crack1.hrb
+	$(LD) -m elf_i386 --oformat binary -e main app/crack1.o app/a_asm.o -o app/crack1.hrb
 
 kernel.sys: ${K_OBJS} ${L_OBJS}
 	$(LD) -m elf_i386 --oformat binary -o kernel.sys -T kernel.ld $^
