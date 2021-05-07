@@ -1,5 +1,6 @@
 #include <stdio.h>
 
+#include "app.h"
 #include "bootpack.h"
 #include "command.h"
 #include "console.h"
@@ -83,7 +84,7 @@ int cmd_app(struct Console *cons, int *fat, char *cmdline) {
   struct MemMan *memman = (struct MemMan *)MEMMAN_ADDR;
   struct FileInfo *finfo;
   struct SegmentDescriptor *gdt = (struct SegmentDescriptor *)ADR_GDT;
-  char name[18], *p;
+  char name[18];
   int i;
 
   for (i = 0; i < 13; i++) {
@@ -107,7 +108,8 @@ int cmd_app(struct Console *cons, int *fat, char *cmdline) {
   }
 
   if (finfo) {
-    p = (char *)memman_alloc_4k(memman, finfo->size + 6);
+    char *p = (char *)memman_alloc_4k(memman, finfo->size + 6);
+    char *q = (char *)memman_alloc_4k(memman, 64 * 1024);
     *((int *)0x0fe8) = (int)p;
     file_load_file(finfo->clustno, finfo->size, p + 6, fat,
                    (char *)(ADR_DISKIMG + 0x003e00));
@@ -128,8 +130,12 @@ int cmd_app(struct Console *cons, int *fat, char *cmdline) {
       set_segmdesc(gdt + 1003, finfo->size - 1 + 6, (int)p, AR_CODE32_ER);
     }
 
-    far_call(0, 1003 * 8);
+    set_segmdesc(gdt + 1004, 64 * 1024 - 1, (int)q, AR_DATA32_RW);
+
+    start_app(0, 1003 * 8, 64 * 1024, 1004 * 8);
+
     memman_free_4k(memman, (int)p, finfo->size + 6);
+    memman_free_4k(memman, (int)q, 64 * 1024);
     cons_newline(cons);
 
     return 1;

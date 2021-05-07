@@ -21,9 +21,11 @@ L_OBJS  := libc/stdio/stdio.bin libc/string/strcmp.bin libc/string/strncmp.bin
 K_OBJS	:= bootpack.bin io.bin pm.bin hankaku.bin desctbl.bin graphic.bin \
 		int.bin inthandler.bin fifo.bin keyboard.bin mouse.bin \
 		memory.bin sheet.bin window.bin timer.bin task_asm.bin \
-		task.bin console.bin fs.bin command.bin api.bin api_asm.bin
+		task.bin console.bin fs.bin command.bin api.bin api_asm.bin \
+		app_asm.bin app.bin
 # Applications
-APPS	:= app/hello.hrb app/hello2.hrb app/a.hrb app/hello3.hrb
+APPS	:= app/hello.hrb app/hello2.hrb app/a.hrb app/hello3.hrb app/crack1.hrb \
+		app/crack2.hrb
 SYS	:= haribote.sys
 IMG	:= haribote.img
 
@@ -57,6 +59,10 @@ app/a.hrb: app/a_asm.o
 app/hello3.hrb: app/a_asm.o
 	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/hello3.c -o app/hello3.o
 	$(LD) -m elf_i386 --oformat binary -e main app/hello3.o app/a_asm.o -o app/hello3.hrb
+
+app/crack1.hrb:
+	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/crack1.c -o app/crack1.o
+	$(LD) -m elf_i386 --oformat binary -e main app/crack1.o -o app/crack1.hrb
 
 kernel.sys: ${K_OBJS} ${L_OBJS}
 	$(LD) -m elf_i386 --oformat binary -o kernel.sys -T kernel.ld $^
