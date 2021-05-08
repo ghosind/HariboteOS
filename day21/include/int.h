@@ -16,6 +16,7 @@
 
 void init_pic(void);
 
+int *int_handler0d(int *esp);
 void int_handler2c(int *esp);
 
 void asm_int_handler0d(void);

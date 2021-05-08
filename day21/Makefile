@@ -22,7 +22,7 @@ K_OBJS	:= bootpack.bin io.bin pm.bin hankaku.bin desctbl.bin graphic.bin \
 		int.bin inthandler.bin fifo.bin keyboard.bin mouse.bin \
 		memory.bin sheet.bin window.bin timer.bin task_asm.bin \
 		task.bin console.bin fs.bin command.bin api.bin api_asm.bin \
-		app_asm.bin app.bin
+		app.bin
 # Applications
 APPS	:= app/hello.hrb app/hello2.hrb app/a.hrb app/hello3.hrb app/crack1.hrb \
 		app/crack2.hrb
