@@ -26,7 +26,7 @@ K_OBJS	:= bootpack.bin io.bin pm.bin hankaku.bin desctbl.bin graphic.bin \
 # Applications
 APPS	:= app/hello.hrb app/hello2.hrb app/a.hrb app/hello3.hrb app/crack1.hrb \
 		app/crack2.hrb app/crack3.hrb app/crack4.hrb app/crack5.hrb \
-		app/crack6.hrb app/bug1.hrb
+		app/crack6.hrb app/bug1.hrb app/bug2.hrb app/bug3.hrb
 SYS	:= haribote.sys
 IMG	:= haribote.img
 
@@ -68,6 +68,14 @@ app/crack1.hrb: app/a_asm.o
 app/bug1.hrb: app/a_asm.o
 	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/bug1.c -o app/bug1.o
 	$(LD) -m elf_i386 --oformat binary -e main app/bug1.o app/a_asm.o -o app/bug1.hrb
+
+app/bug2.hrb:
+	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/bug2.c -o app/bug2.o
+	$(LD) -m elf_i386 --oformat binary -e main app/bug2.o -o app/bug2.hrb
+
+app/bug3.hrb: app/a_asm.o
+	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/bug3.c -o app/bug3.o
+	$(LD) -m elf_i386 --oformat binary -e main app/bug3.o app/a_asm.o -o app/bug3.hrb
 
 kernel.sys: ${K_OBJS} ${L_OBJS}
 	$(LD) -m elf_i386 --oformat binary -o kernel.sys -T kernel.ld $^

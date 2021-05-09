@@ -1,6 +1,6 @@
   [BITS 32]
 
-  GLOBAL start_app
+  GLOBAL start_app, asm_end_app
 
 start_app:                ; void start_app(int eip, int cs, int esp, int ds, int *tss_esp0);
   PUSHAD
@@ -23,3 +23,9 @@ start_app:                ; void start_app(int eip, int cs, int esp, int ds, int
   PUSH    ECX
   PUSH    EAX
   RETF
+
+asm_end_app:
+  MOV     ESP, [EAX]
+  MOV     DWORD [EAX+4], 0
+  POPAD
+  RET

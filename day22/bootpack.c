@@ -1,5 +1,6 @@
 #include <stdio.h>
 
+#include "app.h"
 #include "bootpack.h"
 #include "console.h"
 #include "desctbl.h"
@@ -27,8 +28,8 @@ int main(void) {
   struct Timer *timer;
   struct FIFO32 fifo, keycmd;
   int fifobuf[128], keycmd_buf[32];
-  int data, key_to = 0, key_shift = 0, key_leds = (binfo->leds >> 4) & 7,
-            keycmd_wait = -1;
+  int data, key_to = 0, key_shift = 0, key_ctl = 0,
+            key_leds = (binfo->leds >> 4) & 7, keycmd_wait = -1;
 
   init_gdtidt();
   init_pic(); // GDT/IDT完成初始化，开放CPU中断
@@ -154,7 +155,7 @@ int main(void) {
           }
         }
 
-        if (s[0]) {
+        if (!key_ctl && s[0]) {
           if (!key_to) {
             if (cursor_x < 128) {
               // 显示一个字符之后将光标后移一位
@@ -228,6 +229,16 @@ int main(void) {
           key_shift &= ~2;
         }
 
+        // 左Ctrl按下
+        if (data == 256 + 0x1d) {
+          key_ctl |= 1;
+        }
+
+        // 左Ctrl释放
+        if (data == 256 + 0x9d) {
+          key_ctl &= ~1;
+        }
+
         // CapsLock
         if (data == 256 + 0x3a) {
           key_leds ^= 4;
@@ -245,6 +256,15 @@ int main(void) {
           key_leds ^= 1;
           fifo32_put(&keycmd, KEYCMD_LED);
           fifo32_put(&keycmd, key_leds);
+        }
+
+        if (data == 256 + 0x2e && key_ctl != 0 && task_cons->tss.ss0 != 0) {
+          struct Console *cons = (struct Console *)*((int *)0x0fec);
+          cons_putstr(cons, "\nBreak(key):\n");
+          io_cli();
+          task_cons->tss.eax = (int)&(task_cons->tss.esp0);
+          task_cons->tss.eip = (int)asm_end_app;
+          io_sti();
         }
 
         // 键盘成功接收到数据
