@@ -1,7 +1,6 @@
   [BITS 32]
 
   GLOBAL asm_hrb_api
-  GLOBAL api_putchar
 
   EXTERN hrb_api
 

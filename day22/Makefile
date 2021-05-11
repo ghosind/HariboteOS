@@ -26,7 +26,8 @@ K_OBJS	:= bootpack.bin io.bin pm.bin hankaku.bin desctbl.bin graphic.bin \
 # Applications
 APPS	:= app/hello.hrb app/hello2.hrb app/a.hrb app/hello3.hrb app/crack1.hrb \
 		app/crack2.hrb app/crack3.hrb app/crack4.hrb app/crack5.hrb \
-		app/crack6.hrb app/bug1.hrb app/bug2.hrb app/bug3.hrb
+		app/crack6.hrb app/bug1.hrb app/bug2.hrb app/bug3.hrb \
+		app/bug4.hrb
 SYS	:= haribote.sys
 IMG	:= haribote.img
 
@@ -50,32 +51,36 @@ asmhead.bin:
 %.hrb: %.asm
 	$(AS) -f bin $< -o $@  -l $(subst .asm,.lst,$<)
 
-app/a_asm.o:
-	$(AS) -f elf app/a_asm.asm -o app/a_asm.o
+app/api.o:
+	$(AS) -f elf app/api.asm -o app/api.o
 
-app/a.hrb: app/a_asm.o
+app/a.hrb: app/api.o
 	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/a.c -o app/a.o
-	$(LD) -m elf_i386 --oformat binary -e main app/a.o app/a_asm.o -o app/a.hrb
+	$(LD) -m elf_i386 --oformat binary -e main app/a.o app/api.o -o app/a.hrb
 
-app/hello3.hrb: app/a_asm.o
+app/hello3.hrb: app/api.o
 	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/hello3.c -o app/hello3.o
-	$(LD) -m elf_i386 --oformat binary -e main app/hello3.o app/a_asm.o -o app/hello3.hrb
+	$(LD) -m elf_i386 --oformat binary -e main app/hello3.o app/api.o -o app/hello3.hrb
 
-app/crack1.hrb: app/a_asm.o
+app/crack1.hrb: app/api.o
 	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/crack1.c -o app/crack1.o
-	$(LD) -m elf_i386 --oformat binary -e main app/crack1.o app/a_asm.o -o app/crack1.hrb
+	$(LD) -m elf_i386 --oformat binary -e main app/crack1.o app/api.o -o app/crack1.hrb
 
-app/bug1.hrb: app/a_asm.o
+app/bug1.hrb: app/api.o
 	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/bug1.c -o app/bug1.o
-	$(LD) -m elf_i386 --oformat binary -e main app/bug1.o app/a_asm.o -o app/bug1.hrb
+	$(LD) -m elf_i386 --oformat binary -e main app/bug1.o app/api.o -o app/bug1.hrb
 
 app/bug2.hrb:
 	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/bug2.c -o app/bug2.o
 	$(LD) -m elf_i386 --oformat binary -e main app/bug2.o -o app/bug2.hrb
 
-app/bug3.hrb: app/a_asm.o
+app/bug3.hrb: app/api.o
 	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/bug3.c -o app/bug3.o
-	$(LD) -m elf_i386 --oformat binary -e main app/bug3.o app/a_asm.o -o app/bug3.hrb
+	$(LD) -m elf_i386 --oformat binary -e main app/bug3.o app/api.o -o app/bug3.hrb
+
+app/bug4.hrb: app/api.o
+	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/bug4.c -o app/bug4.o
+	$(LD) -m elf_i386 --oformat elf32-i386 -e main app/bug4.o app/api.o -o app/bug4.hrb
 
 kernel.sys: ${K_OBJS} ${L_OBJS}
 	$(LD) -m elf_i386 --oformat binary -o kernel.sys -T kernel.ld $^
