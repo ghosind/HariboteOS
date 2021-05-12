@@ -5,6 +5,7 @@
 #include "command.h"
 #include "console.h"
 #include "desctbl.h"
+#include "elf.h"
 #include "fs.h"
 #include "graphic.h"
 #include "memory.h"
@@ -110,18 +111,24 @@ int cmd_app(struct Console *cons, int *fat, char *cmdline) {
 
   if (finfo) {
     char *p = (char *)memman_alloc_4k(memman, finfo->size);
-    char *q = (char *)memman_alloc_4k(memman, 64 * 1024);
     *((int *)0x0fe8) = (int)p;
     file_load_file(finfo->clustno, finfo->size, p, fat,
                    (char *)(ADR_DISKIMG + 0x003e00));
+    Elf32_Ehdr *elfhdr = (Elf32_Ehdr *) p;
 
-    set_segmdesc(gdt + 1003, finfo->size - 1, (int)p, AR_CODE32_ER + 0x60);
-    set_segmdesc(gdt + 1004, 64 * 1024 - 1, (int)q, AR_DATA32_RW + 0x60);
+    if (elf32_validate(elfhdr)) {
+      char *q = (char *)memman_alloc_4k(memman, 64 * 1024);
 
-    start_app(0, 1003 * 8, 64 * 1024, 1004 * 8, &(task->tss.esp0));
+      set_segmdesc(gdt + 1003, finfo->size - 1, (int)p, AR_CODE32_ER + 0x60);
+      set_segmdesc(gdt + 1004, 64 * 1024 - 1, (int)q, AR_DATA32_RW + 0x60);
 
-    memman_free_4k(memman, (int)p, finfo->size + 6);
-    memman_free_4k(memman, (int)q, 64 * 1024);
+      start_app(elfhdr->e_entry - 0x08048000, 1003 * 8, 64 * 1024, 1004 * 8, &(task->tss.esp0));
+      memman_free_4k(memman, (int)q, 64 * 1024);
+    } else {
+      cons_putstr(cons, "ELF file format error.\n");
+    }
+
+    memman_free_4k(memman, (int)p, finfo->size);
     cons_newline(cons);
 
     return 1;
