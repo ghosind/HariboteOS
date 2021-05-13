@@ -122,7 +122,7 @@ int cmd_app(struct Console *cons, int *fat, char *cmdline) {
       set_segmdesc(gdt + 1003, finfo->size - 1, (int)p, AR_CODE32_ER + 0x60);
       set_segmdesc(gdt + 1004, 64 * 1024 - 1, (int)q, AR_DATA32_RW + 0x60);
 
-      start_app(elfhdr->e_entry - 0x08048000, 1003 * 8, 64 * 1024, 1004 * 8, &(task->tss.esp0));
+      start_app(elfhdr->e_entry, 1003 * 8, 64 * 1024, 1004 * 8, &(task->tss.esp0));
       memman_free_4k(memman, (int)q, 64 * 1024);
     } else {
       cons_putstr(cons, "ELF file format error.\n");

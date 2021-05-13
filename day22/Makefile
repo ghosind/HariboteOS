@@ -80,7 +80,7 @@ app/bug3.hrb: app/api.o
 
 app/bug4.hrb: app/api.o
 	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/bug4.c -o app/bug4.o
-	$(LD) -m elf_i386 --oformat elf32-i386 -e main app/bug4.o app/api.o -o app/bug4.hrb
+	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie app/bug4.o app/api.o -o app/bug4.hrb
 
 kernel.sys: ${K_OBJS} ${L_OBJS}
 	$(LD) -m elf_i386 --oformat binary -o kernel.sys -T kernel.ld $^
