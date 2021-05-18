@@ -6,7 +6,7 @@
 
 int *hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx,
              int eax) {
-  int cs_base = *((int *)0x0fe8);
+  int ds_base = *((int *)0x0fe8);
   struct Task *task = task_now();
   struct Console *cons = (struct Console *)*((int *)0x0fec);
   char s[12];
@@ -14,9 +14,9 @@ int *hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx,
   if (edx == 1) {
     cons_putchar(cons, eax & 0xff, 1);
   } else if (edx == 2) {
-    cons_putstr(cons, (char *)ebx + cs_base);
+    cons_putstr(cons, (char *)ebx + ds_base);
   } else if (edx == 3) {
-    cons_putnstr(cons, (char *)ebx + cs_base, ecx);
+    cons_putnstr(cons, (char *)ebx + ds_base, ecx);
   } else if (edx == 4) {
     return &(task->tss.esp0);
   }

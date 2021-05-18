@@ -118,11 +118,19 @@ int cmd_app(struct Console *cons, int *fat, char *cmdline) {
 
     if (elf32_validate(elfhdr)) {
       char *q = (char *)memman_alloc_4k(memman, 64 * 1024);
+      *((int *) 0x0fe8) = (int)q;
 
       set_segmdesc(gdt + 1003, finfo->size - 1, (int)p, AR_CODE32_ER + 0x60);
       set_segmdesc(gdt + 1004, 64 * 1024 - 1, (int)q, AR_DATA32_RW + 0x60);
 
-      start_app(elfhdr->e_entry, 1003 * 8, 64 * 1024, 1004 * 8, &(task->tss.esp0));
+      Elf32_Shdr *shdr = get_data_section(p, elfhdr);
+      if (shdr) {
+        for (int i = 0; i < shdr->sh_size; i++) {
+          q[shdr->sh_addr + i] = p[shdr->sh_offset + i];
+        }
+      }
+
+      start_app(elfhdr->e_entry, 1003 * 8, 0, 1004 * 8, &(task->tss.esp0));
       memman_free_4k(memman, (int)q, 64 * 1024);
     } else {
       cons_putstr(cons, "ELF file format error.\n");

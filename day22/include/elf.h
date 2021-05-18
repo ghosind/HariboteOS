@@ -142,5 +142,6 @@ typedef struct {
 } Elf32_Phdr;
 
 int elf32_validate(Elf32_Ehdr *hdr);
+Elf32_Shdr *get_data_section(const char *buf, Elf32_Ehdr *elf_header);
 
 #endif // _ELF_H_
