@@ -27,7 +27,7 @@ K_OBJS	:= bootpack.bin io.bin pm.bin hankaku.bin desctbl.bin graphic.bin \
 APPS	:= app/hello.hrb app/hello2.hrb app/a.hrb app/hello3.hrb app/crack1.hrb \
 		app/crack2.hrb app/crack3.hrb app/crack4.hrb app/crack5.hrb \
 		app/crack6.hrb app/bug1.hrb app/bug2.hrb app/bug3.hrb \
-		app/bug4.hrb app/hello5.hrb
+		app/bug4.hrb app/hello5.hrb app/winhello.hrb app/winhelo2.hrb
 SYS	:= haribote.sys
 IMG	:= haribote.img
 
@@ -85,6 +85,14 @@ app/bug4.hrb: app/api.o
 app/hello5.hrb:
 	$(AS) -f elf app/hello5.asm -o app/hello5.o
 	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie app/hello5.o -o app/hello5.hrb
+
+app/winhello.hrb: app/api.o
+	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/winhello.c -o app/winhello.o
+	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie app/winhello.o app/api.o -o app/winhello.hrb
+
+app/winhelo2.hrb: app/api.o
+	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/winhello2.c -o app/winhello2.o
+	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie app/winhello2.o app/api.o -o app/winhelo2.hrb
 
 kernel.sys: ${K_OBJS} ${L_OBJS}
 	$(LD) -m elf_i386 --oformat binary -o kernel.sys -T kernel.ld $^
