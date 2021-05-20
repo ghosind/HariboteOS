@@ -3,6 +3,7 @@
   GLOBAL api_putchar, api_end, api_putstr
   GLOBAL api_open_win, api_putstr_win, api_boxfill_win
   GLOBAL api_malloc_init, api_malloc, api_free
+  GLOBAL api_point
 
 api_putchar:
   MOV   EDX, 1
@@ -105,4 +106,19 @@ api_free:               ; void api_free(void *addr, int size);
   MOV     ECX, [ESP+12]
   INT     0x40
   POP     EBX
+  RET
+
+api_point:              ; void api_point(int win, int x, int y, int col);
+  PUSH    EDI
+  PUSH    ESI
+  PUSH    EBX
+  MOV     EDX, 11
+  MOV     EBX, [ESP+16]
+  MOV     ESI, [ESP+20]
+  MOV     EDI, [ESP+24]
+  MOV     EAX, [ESP+28]
+  INT     0x40
+  POP     EBX
+  POP     ESI
+  POP     EDI
   RET

@@ -52,6 +52,10 @@ int *hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx,
   } else if (edx == 10) {
     ecx = (ecx + 0x0f) & 0xfffffff0;
     memman_free((struct MemMan *)(ebx + ds_base), eax, ecx);
+  } else if (edx == 11) {
+    sht = (struct Sheet *) ebx;
+    sht->buf[sht->bxsize * edi + esi] = eax;
+    sheet_refresh(sht, esi, edi, esi + 1, edi + 1);
   }
 
   // } else if (edx == 123456789) {
