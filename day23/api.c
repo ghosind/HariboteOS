@@ -34,14 +34,18 @@ int *hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx,
     sheet_updown(sht, 3);
     reg[7] = (int)sht;
   } else if (edx == 6) {
-    sht = (struct Sheet *)ebx;
+    sht = (struct Sheet *)(ebx & 0xfffffffe);
     put_fonts8_asc(sht->buf, sht->bxsize, esi, edi, eax,
                    (char *)(ebp + ds_base));
-    sheet_refresh(sht, esi, edi, esi + ecx * 8, edi + 16);
+    if (!(ebx & 1)) {
+      sheet_refresh(sht, esi, edi, esi + ecx * 8, edi + 16);
+    }
   } else if (edx == 7) {
-    sht = (struct Sheet *)ebx;
+    sht = (struct Sheet *)(ebx & 0xfffffffe);
     box_fill8(sht->buf, sht->bxsize, ebp, eax, ecx, esi, edi);
-    sheet_refresh(sht, eax, ecx, esi + 1, edi + 1);
+    if (!(ebx & 1)) {
+      sheet_refresh(sht, eax, ecx, esi + 1, edi + 1);
+    }
   } else if (edx == 8) {
     memman_init((struct MemMan *)(ebx + ds_base));
     ecx &= 0xfffffff0;
@@ -53,14 +57,15 @@ int *hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx,
     ecx = (ecx + 0x0f) & 0xfffffff0;
     memman_free((struct MemMan *)(ebx + ds_base), eax, ecx);
   } else if (edx == 11) {
-    sht = (struct Sheet *) ebx;
+    sht = (struct Sheet *)(ebx & 0xfffffffe);
     sht->buf[sht->bxsize * edi + esi] = eax;
-    sheet_refresh(sht, esi, edi, esi + 1, edi + 1);
+    if (!(ebx & 1)) {
+      sheet_refresh(sht, esi, edi, esi + 1, edi + 1);
+    }
+  } else if (edx == 12) {
+    sht = (struct Sheet *)ebx;
+    sheet_refresh(sht, eax, ecx, esi, edi);
   }
-
-  // } else if (edx == 123456789) {
-  //   *((char *) 0x00102600) = 0;
-  // }
 
   return 0;
 }
