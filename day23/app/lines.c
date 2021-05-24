@@ -12,8 +12,14 @@ int main() {
   }
 
   api_refresh_win(win, 6, 26, 154, 90);
+
+  for (;;) {
+    if (api_get_key(1) == 0x0a) {
+      break;
+    }
+  }
+
   api_close_win(win);
-  
   api_end();
 
   return 0;

@@ -5,6 +5,7 @@
   GLOBAL api_putstr_win, api_boxfill_win
   GLOBAL api_malloc_init, api_malloc, api_free
   GLOBAL api_point, api_refresh_win, api_line_win
+  GLOBAL api_get_key
 
 api_putchar:
   MOV   EDX, 1
@@ -165,4 +166,10 @@ api_close_win:          ; void api_close_win(int win);
   MOV     EBX, [ESP+8]
   INT     0x40
   POP     EBX
+  RET
+
+api_get_key:            ; int api_get_key(int mode);
+  MOV     EDX, 15
+  MOV     EAX, [ESP+4]
+  INT     0x40
   RET

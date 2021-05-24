@@ -20,4 +20,6 @@ void api_point(int win, int x, int y, int col);
 void api_line_win(int win, int x0, int y0, int x1, int y1, int col);
 void api_refresh_win(int win, int x0, int y0, int x1, int y1);
 
+int api_get_key(int mode);
+
 #endif // U_API_H

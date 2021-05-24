@@ -3,6 +3,7 @@
 #include "api.h"
 #include "console.h"
 #include "graphic.h"
+#include "io.h"
 #include "sheet.h"
 #include "task.h"
 #include "window.h"
@@ -87,6 +88,39 @@ int *hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx,
     break;
   case 14:
     sheet_free((struct Sheet *)ebx);
+    break;
+  case 15:
+    for (;;) {
+      io_cli();
+
+      if (!fifo32_status(&task->fifo)) {
+        if (eax) {
+          task_sleep(task);
+        } else {
+          io_sti();
+          reg[7] = -1;
+          return 0;
+        }
+      }
+
+      int data = fifo32_get(&task->fifo);
+      io_sti();
+      if (data <= 1) {
+        timer_init(cons->timer, &task->fifo, 1);
+        timer_set_timer(cons->timer, 50);
+      }
+      if (data == 2) {
+        cons->cur_c = COL8_FFFFFF;
+      }
+      if (data == 3) {
+        cons->cur_c = -1;
+      }
+      if (256 <= data && data <= 511) {
+        reg[7] = data - 256;
+        return 0;
+      }
+    }
+
     break;
   default:
     break;
