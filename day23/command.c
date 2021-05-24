@@ -137,6 +137,15 @@ int cmd_app(struct Console *cons, int *fat, char *cmdline) {
       }
 
       start_app(elfhdr->e_entry, 1003 * 8, 0, 1004 * 8, &(task->tss.esp0));
+      
+      struct Shtctl *shtctl = (struct Shtctl *)*((int *) 0x0fe4);
+      for (int i = 0; i < MAX_SHEETS; i++) {
+        struct Sheet *sht = &(shtctl->sheets0[i]);
+        if (sht->flags && sht->task == task) {
+          sheet_free(sht);
+        }
+      }
+
       memman_free_4k(memman, (int)q, 64 * 1024);
     } else {
       cons_putstr(cons, "ELF file format error.\n");
