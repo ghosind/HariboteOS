@@ -1,9 +1,10 @@
   [BITS 32]
 
   GLOBAL api_putchar, api_end, api_putstr
-  GLOBAL api_open_win, api_putstr_win, api_boxfill_win
+  GLOBAL api_open_win, api_close_win
+  GLOBAL api_putstr_win, api_boxfill_win
   GLOBAL api_malloc_init, api_malloc, api_free
-  GLOBAL api_point, api_refresh_win
+  GLOBAL api_point, api_refresh_win, api_line_win
 
 api_putchar:
   MOV   EDX, 1
@@ -137,4 +138,31 @@ api_refresh_win:        ; void api_refresh_win(int win, int x0, int y0, int x1, 
   POP     EBX
   POP     ESI
   POP     EDI
+  RET
+
+api_line_win:           ; void api_line_win(int win, int x0, int y0, int x1, int y1, int col);
+  PUSH    EDI
+  PUSH    ESI
+  PUSH    EBP
+  PUSH    EBX
+  MOV     EDX, 13
+  MOV     EBX, [ESP+20]
+  MOV     EAX, [ESP+24]
+  MOV     ECX, [ESP+28]
+  MOV     ESI, [ESP+32]
+  MOV     EDI, [ESP+36]
+  MOV     EBP, [ESP+40]
+  INT     0x40
+  POP     EBX
+  POP     EBP
+  POP     ESI
+  POP     EDI
+  RET
+
+api_close_win:          ; void api_close_win(int win);
+  PUSH    EBX
+  MOV     EDX, 14
+  MOV     EBX, [ESP+8]
+  INT     0x40
+  POP     EBX
   RET

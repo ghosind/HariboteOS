@@ -78,9 +78,68 @@ int *hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx,
     sht = (struct Sheet *)ebx;
     sheet_refresh(sht, eax, ecx, esi, edi);
     break;
+  case 13:
+    sht = (struct Sheet *)(ebx & 0xfffffffe);
+    api_line_win(sht, eax, ecx, esi, edi, ebp);
+    if (!(ebx & 1)) {
+      sheet_refresh(sht, esi, edi, esi + 1, edi + 1);
+    }
+    break;
+  case 14:
+    sheet_free((struct Sheet *)ebx);
+    break;
   default:
     break;
   }
 
   return 0;
+}
+
+void api_line_win(struct Sheet *sht, int x0, int y0, int x1, int y1, int col) {
+  int dx = x1 - x0;
+  int dy = y1 - y0;
+  int x = x0 << 10;
+  int y = y0 << 10;
+  int len = 0;
+
+  if (dx < 0) {
+    dx = -dx;
+  }
+  if (dy < 0) {
+    dy = -dy;
+  }
+
+  if (dx >= dy) {
+    len = dx + 1;
+    if (x0 > x1) {
+      dx = -1024;
+    } else {
+      dx = 1024;
+    }
+
+    if (y0 <= y1) {
+      dy = ((y1 - y0 + 1) << 10) / len;
+    } else {
+      dy = ((y1 - y0 - 1) << 10) / len;
+    }
+  } else {
+    len = dy + 1;
+    if (y0 > y1) {
+      dy = -1024;
+    } else {
+      dy = 1024;
+    }
+
+    if (x0 <= x1) {
+      dx = ((x1 - x0 + 1) << 10) / len;
+    } else {
+      dx = ((x1 - x0 - 1) << 10) / len;
+    }
+  }
+
+  for (int i = 0; i < len; i++) {
+    sht->buf[(y >> 10) * sht->bxsize + (x >> 10)] = col;
+    x += dx;
+    y += dy;
+  }
 }
