@@ -117,12 +117,25 @@ int *hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx,
       if (data == 3) {
         cons->cur_c = -1;
       }
-      if (256 <= data && data <= 511) {
+      if (256 <= data) {
         reg[7] = data - 256;
         return 0;
       }
     }
 
+    break;
+  case 16:
+    reg[7] = (int)timer_alloc();
+    ((struct Timer *)reg[7])->flags2 = 1;
+    break;
+  case 17:
+    timer_init((struct Timer *)ebx, &task->fifo, eax + 256);
+    break;
+  case 18:
+    timer_set_timer((struct Timer *)ebx, eax);
+    break;
+  case 19:
+    timer_free((struct Timer *)ebx);
     break;
   default:
     break;

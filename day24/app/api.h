@@ -22,4 +22,9 @@ void api_refresh_win(int win, int x0, int y0, int x1, int y1);
 
 int api_get_key(int mode);
 
+int api_alloc_timer(void);
+void api_init_timer(int timer, int data);
+void api_set_timer(int timer, int time);
+void api_free_timer(int timer);
+
 #endif // U_API_H

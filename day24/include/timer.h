@@ -13,7 +13,7 @@
 
 struct Timer {
   struct Timer *next;
-  unsigned int flags;
+  unsigned int flags, flags2;
   unsigned int timeout;
   struct FIFO32 *fifo;
   int data;
@@ -32,6 +32,8 @@ struct Timer *timer_alloc(void);
 void timer_free(struct Timer *timer);
 void timer_init(struct Timer *timer, struct FIFO32 *fifo, int data);
 void timer_set_timer(struct Timer *timer, unsigned int timeout);
+int timer_cancel(struct Timer *timer);
+void timer_cancel_all(struct FIFO32 *fifo);
 
 void int_handler20(int *esp);
 

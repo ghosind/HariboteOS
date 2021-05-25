@@ -146,6 +146,7 @@ int cmd_app(struct Console *cons, int *fat, char *cmdline) {
         }
       }
 
+      timer_cancel_all(&task->fifo);
       memman_free_4k(memman, (int)q, 64 * 1024);
     } else {
       cons_putstr(cons, "ELF file format error.\n");
