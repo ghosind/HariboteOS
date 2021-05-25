@@ -1,7 +1,9 @@
-#include "window.h"
 #include "graphic.h"
+#include "sheet.h"
+#include "window.h"
 
-void make_window8(unsigned char *buf, int xsize, int ysize, char *title, char act) {
+void make_window8(unsigned char *buf, int xsize, int ysize, char *title,
+                  char act) {
   box_fill8(buf, xsize, COL8_C6C6C6, 0, 0, xsize - 1, 0);
   box_fill8(buf, xsize, COL8_FFFFFF, 1, 1, xsize - 2, 1);
   box_fill8(buf, xsize, COL8_C6C6C6, 0, 0, 0, ysize - 1);
@@ -77,4 +79,63 @@ void make_window_title8(unsigned char *buf, int xsize, char *title, char act) {
       buf[(5 + y) * xsize + (xsize - 21 + x)] = c;
     }
   }
+}
+
+void change_window_title8(struct Sheet *sht, char act) {
+  int xsize = sht->bxsize;
+  char tc_new, tbc_new, tc_old, tbc_old;
+  unsigned char *buf = sht->buf;
+
+  if (act) {
+    tc_new = COL8_FFFFFF;
+    tbc_new = COL8_000084;
+    tc_old = COL8_C6C6C6;
+    tbc_old = COL8_848484;
+  } else {
+    tc_new = COL8_C6C6C6;
+    tbc_new = COL8_848484;
+    tc_old = COL8_FFFFFF;
+    tbc_old = COL8_000084;
+  }
+
+  for (int y = 3; y <= 20; y++) {
+    for (int x = 3; x <= xsize - 4; x++) {
+      char c = buf[y * xsize + x];
+      if (c == tc_old && x <= xsize - 22) {
+        c = tc_new;
+      } else if (c == tbc_old) {
+        c = tbc_new;
+      }
+      buf[y * xsize + x] = c;
+    }
+  }
+
+  sheet_refresh(sht, 3, 3, xsize, 21);
+}
+
+int keywin_off(struct Sheet *key_win, struct Sheet *sht_win, int cur_c,
+               int cur_x) {
+  change_window_title8(key_win, 0);
+
+  if (key_win == sht_win) {
+    cur_c = -1;
+    box_fill8(sht_win->buf, sht_win->bxsize, COL8_FFFFFF, cur_x, 28, cur_x + 7,
+              43);
+  } else if (key_win->flags & 0x20) {
+    fifo32_put(&key_win->task->fifo, 3);
+  }
+
+  return cur_c;
+}
+
+int keywin_on(struct Sheet *key_win, struct Sheet *sht_win, int cur_c) {
+  change_window_title8(key_win, 1);
+
+  if (key_win == sht_win) {
+    cur_c = COL8_000000;
+  } else if (key_win->flags & 0x20) {
+    fifo32_put(&key_win->task->fifo, 2);
+  }
+
+  return cur_c;
 }

@@ -141,7 +141,7 @@ int cmd_app(struct Console *cons, int *fat, char *cmdline) {
       struct Shtctl *shtctl = (struct Shtctl *)*((int *) 0x0fe4);
       for (int i = 0; i < MAX_SHEETS; i++) {
         struct Sheet *sht = &(shtctl->sheets0[i]);
-        if (sht->flags && sht->task == task) {
+        if ((sht->flags & 0x11) == 0x11 && sht->task == task) {
           sheet_free(sht);
         }
       }
