@@ -113,29 +113,18 @@ void change_window_title8(struct Sheet *sht, char act) {
   sheet_refresh(sht, 3, 3, xsize, 21);
 }
 
-int keywin_off(struct Sheet *key_win, struct Sheet *sht_win, int cur_c,
-               int cur_x) {
+void keywin_off(struct Sheet *key_win) {
   change_window_title8(key_win, 0);
 
-  if (key_win == sht_win) {
-    cur_c = -1;
-    box_fill8(sht_win->buf, sht_win->bxsize, COL8_FFFFFF, cur_x, 28, cur_x + 7,
-              43);
-  } else if (key_win->flags & 0x20) {
-    fifo32_put(&key_win->task->fifo, 3);
-  }
-
-  return cur_c;
-}
-
-int keywin_on(struct Sheet *key_win, struct Sheet *sht_win, int cur_c) {
-  change_window_title8(key_win, 1);
-
-  if (key_win == sht_win) {
-    cur_c = COL8_000000;
-  } else if (key_win->flags & 0x20) {
+  if (key_win->flags & 0x20) {
     fifo32_put(&key_win->task->fifo, 2);
   }
+}
 
-  return cur_c;
+void keywin_on(struct Sheet *key_win) {
+  change_window_title8(key_win, 1);
+
+  if (key_win->flags & 0x20) {
+    fifo32_put(&key_win->task->fifo, 2);
+  }
 }
