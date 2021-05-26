@@ -1,6 +1,7 @@
 #ifndef _TASK_H_
 #define _TASK_H_
 
+#include "console.h"
 #include "memory.h"
 #include "timer.h"
 
@@ -24,6 +25,8 @@ struct Task {
   int level, priority;
   struct FIFO32 fifo;
   struct TSS32 tss;
+  struct Console *cons;
+  int ds_base;
 };
 
 struct TaskLevel {

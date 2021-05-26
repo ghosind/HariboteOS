@@ -30,8 +30,8 @@ void init_pic(void) {
 }
 
 int *int_handler0c(int *esp) {
-  struct Console *cons = (struct Console *)*((int *)0x0fec);
   struct Task *task = task_now();
+  struct Console *cons = task->cons;
   char s[30];
 
   cons_putstr(cons, "\nINT 0C:\n Stack Exception.\n");
@@ -42,8 +42,8 @@ int *int_handler0c(int *esp) {
 }
 
 int *int_handler0d(int *esp) {
-  struct Console *cons = (struct Console *)*((int *)0x0fec);
   struct Task *task = task_now();
+  struct Console *cons = task->cons;
   char s[30];
 
   cons_putstr(cons, "\nINT 0D:\n General Protected Exception.\n");

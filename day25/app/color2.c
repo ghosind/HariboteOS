@@ -21,7 +21,7 @@ int main() {
   api_malloc_init();
 
   char *buf = api_malloc(144 * 164);
-  int win = api_open_win(buf, 144, 164, -1, "color");
+  int win = api_open_win(buf, 144, 164, -1, "color2");
 
   for (int y = 0; y < 128; y++) {
     for (int x = 0; x < 128; x++) {

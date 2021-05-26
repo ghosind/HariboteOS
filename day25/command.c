@@ -118,10 +118,12 @@ int cmd_app(struct Console *cons, int *fat, char *cmdline) {
 
     if (elf32_validate(elfhdr)) {
       char *q = (char *)memman_alloc_4k(memman, 64 * 1024);
-      *((int *)0x0fe8) = (int)q;
+      task->ds_base = (int)q;
 
-      set_segmdesc(gdt + 1003, finfo->size - 1, (int)p, AR_CODE32_ER + 0x60);
-      set_segmdesc(gdt + 1004, 64 * 1024 - 1, (int)q, AR_DATA32_RW + 0x60);
+      set_segmdesc(gdt + task->sel / 8 + 1000, finfo->size - 1, (int)p,
+                   AR_CODE32_ER + 0x60);
+      set_segmdesc(gdt + task->sel / 8 + 2000, 64 * 1024 - 1, (int)q,
+                   AR_DATA32_RW + 0x60);
 
       for (int i = 0; i < elfhdr->e_shnum; i++) {
         Elf32_Shdr *shdr =
@@ -136,9 +138,10 @@ int cmd_app(struct Console *cons, int *fat, char *cmdline) {
         }
       }
 
-      start_app(elfhdr->e_entry, 1003 * 8, 0, 1004 * 8, &(task->tss.esp0));
-      
-      struct Shtctl *shtctl = (struct Shtctl *)*((int *) 0x0fe4);
+      start_app(elfhdr->e_entry, task->sel + 1000 * 8, 0, task->sel + 2000 * 8,
+                &(task->tss.esp0));
+
+      struct Shtctl *shtctl = (struct Shtctl *)*((int *)0x0fe4);
       for (int i = 0; i < MAX_SHEETS; i++) {
         struct Sheet *sht = &(shtctl->sheets0[i]);
         if ((sht->flags & 0x11) == 0x11 && sht->task == task) {
