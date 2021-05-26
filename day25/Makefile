@@ -31,7 +31,7 @@ APPS	:= app/hello.hrb app/hello2.hrb app/a.hrb app/hello3.hrb app/crack1.hrb \
 		app/bug4.hrb app/hello5.hrb app/winhello.hrb app/winhelo2.hrb \
 		app/winhelo3.hrb app/star1.hrb app/stars.hrb app/stars2.hrb \
 		app/lines.hrb app/walk.hrb app/noodle.hrb app/beepdown.hrb \
-		app/beepup.hrb
+		app/beepup.hrb app/color.hrb app/color2.hrb
 SYS	:= haribote.sys
 IMG	:= haribote.img
 
@@ -133,6 +133,14 @@ app/beepdown.hrb: app/api.o
 app/beepup.hrb: app/api.o
 	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/beepup.c -o app/beepup.o
 	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie app/beepup.o app/api.o -o app/beepup.hrb
+
+app/color.hrb: app/api.o
+	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/color.c -o app/color.o
+	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie app/color.o app/api.o -o app/color.hrb
+
+app/color2.hrb: app/api.o
+	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/color2.c -o app/color2.o
+	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie app/color2.o app/api.o -o app/color2.hrb
 
 kernel.sys: ${K_OBJS} ${L_OBJS}
 	$(LD) -m elf_i386 --oformat binary -o kernel.sys -T kernel.ld $^
