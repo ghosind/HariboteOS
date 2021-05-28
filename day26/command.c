@@ -8,6 +8,7 @@
 #include "elf.h"
 #include "fs.h"
 #include "graphic.h"
+#include "io.h"
 #include "memory.h"
 #include "sheet.h"
 #include "task.h"
@@ -79,6 +80,22 @@ void cmd_type(struct Console *cons, int *fat, char *cmdline) {
   }
 
   cons_newline(cons);
+}
+
+void cmd_exit(struct Console *cons, int *fat) {
+  struct MemMan *memman = (struct MemMan *)MEMMAN_ADDR;
+  struct Task *task = task_now();
+  struct Shtctl *shtctl = (struct Shtctl *)*((int *)0x0fe4);
+  struct FIFO32 *fifo = (struct FIFO32 *)*((int *)0x0fec);
+
+  timer_cancel(cons->timer);
+  memman_free_4k(memman, (int)fat, 4 * 2880);
+  io_cli();
+  fifo32_put(fifo, cons->sheet - shtctl->sheets0 + 768);
+  io_sti();
+  for (;;) {
+    task_sleep(task);
+  }
 }
 
 int cmd_app(struct Console *cons, int *fat, char *cmdline) {

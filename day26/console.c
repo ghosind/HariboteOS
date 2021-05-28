@@ -75,6 +75,10 @@ void console_task(struct Sheet *sheet, unsigned int memtotal) {
         cons.cur_c = -1;
       }
 
+      if (data == 4) {
+        cmd_exit(&cons, fat);
+      }
+
       if (data >= 256 && data <= 511) {
         if (data == 8 + 256) {
           // 退格键
@@ -194,6 +198,8 @@ void cons_run_cmd(char *cmdline, struct Console *cons, int *fat,
     cmd_dir(cons);
   } else if (!strncmp(cmdline, "type ", 5)) {
     cmd_type(cons, fat, cmdline);
+  } else if (!strcmp(cmdline, "exit")) {
+    cmd_exit(cons, fat);
   } else if (strcmp(cmdline, "")) {
     if (!cmd_app(cons, fat, cmdline)) {
       cons_putstr(cons, "Bad command.\n\n");
@@ -211,7 +217,8 @@ struct Sheet *open_console(struct Shtctl *shtctl, unsigned int memtotal) {
   sheet_setbuf(sht, buf, 256, 165, -1);
   make_window8(buf, 256, 165, "console", 0);
   make_textbox8(sht, 8, 28, 240, 128, COL8_000000);
-  task->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 - 12;
+  task->cons_stack = memman_alloc(memman, 64 * 1024);
+  task->tss.esp = task->cons_stack + 64 * 1024 - 12;
   task->tss.eip = (int)&console_task;
   task->tss.es = 1 * 8;
   task->tss.cs = 2 * 8;
@@ -227,4 +234,21 @@ struct Sheet *open_console(struct Shtctl *shtctl, unsigned int memtotal) {
   fifo32_init(&task->fifo, 128, cons_fifo, task);
 
   return sht;
+}
+
+void close_cons_task(struct Task *task) {
+  struct MemMan *memman = (struct MemMan *)MEMMAN_ADDR;
+  task_sleep(task);
+  memman_free_4k(memman, task->cons_stack, 64 * 1024);
+  memman_free_4k(memman, (int)task->fifo.buf, 128 * 4);
+  task->flags = 0;
+}
+
+void close_console(struct Sheet *sht) {
+  struct MemMan *memman = (struct MemMan *)MEMMAN_ADDR;
+  struct Task *task = (struct Task *)sht->task;
+
+  memman_free_4k(memman, (int)sht->buf, 256 * 165);
+  sheet_free(sht);
+  close_cons_task(task);
 }

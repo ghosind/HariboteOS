@@ -28,6 +28,7 @@ int main(void) {
   unsigned char *buf_back, buf_mouse[256];
   struct FIFO32 fifo, keycmd;
   struct Console *cons = NULL;
+  struct Task *task;
   int fifobuf[128], keycmd_buf[32];
   int data, key_to = 0, key_shift = 0, key_ctl = 0, key_alt = 0,
             key_leds = (binfo->leds >> 4) & 7, keycmd_wait = -1;
@@ -96,6 +97,7 @@ int main(void) {
   fifo32_put(&keycmd, key_leds);
 
   *((int *)0x0fe4) = (int)shtctl;
+  *((int *)0x0fec) = (int)&fifo;
 
   for (;;) {
     if (fifo32_status(&keycmd) > 0 && keycmd_wait < 0) {
@@ -108,23 +110,27 @@ int main(void) {
     io_cli();
     if (fifo32_status(&fifo) == 0) {
       if (new_mx >= 0) {
-				io_sti();
-				sheet_slide(sht_mouse, new_mx, new_my);
-				new_mx = -1;
-			} else if (new_wx != 0x7fffffff) {
-				io_sti();
-				sheet_slide(sht, new_wx, new_wy);
-				new_wx = 0x7fffffff;
-			} else {
-				task_sleep(task_a);
-				io_sti();
-			}
+        io_sti();
+        sheet_slide(sht_mouse, new_mx, new_my);
+        new_mx = -1;
+      } else if (new_wx != 0x7fffffff) {
+        io_sti();
+        sheet_slide(sht, new_wx, new_wy);
+        new_wx = 0x7fffffff;
+      } else {
+        task_sleep(task_a);
+        io_sti();
+      }
     } else {
       data = fifo32_get(&fifo);
       io_sti();
 
-      if (!key_win->flags) {
-        key_win = shtctl->sheets[shtctl->top - 1];
+      if (key_win != NULL && !key_win->flags) {
+        if (shtctl->top == 1) {
+          key_win = NULL;
+        } else {
+          key_win = shtctl->sheets[shtctl->top - 1];
+        }
       }
 
       if (256 <= data && data <= 511) {
@@ -146,7 +152,7 @@ int main(void) {
           }
         }
 
-        if (!key_ctl && s[0]) {
+        if (s[0] && (key_win || !key_ctl)) {
           fifo32_put(&key_win->task->fifo, s[0] + 256);
         }
 
@@ -225,7 +231,7 @@ int main(void) {
           fifo32_put(&keycmd, key_leds);
         }
 
-        if (data == 256 + 0x2e && key_ctl != 0) {
+        if (data == 256 + 0x2e && key_ctl != 0 && key_win) {
           struct Task *task = key_win->task;
           if (task && task->tss.ss0 != 0) {
             cons_putstr(task->cons, "\nBreak(key):\n");
@@ -237,7 +243,9 @@ int main(void) {
         }
 
         if (data == 256 + 0x3c && key_shift != 0) {
-          keywin_off(key_win);
+          if (key_win) {
+            keywin_off(key_win);
+          }
 
           key_win = open_console(shtctl, memtotal);
           sheet_slide(key_win, 32, 4);
@@ -305,11 +313,16 @@ int main(void) {
                         5 <= y && y < 19) {
                       // 点击X
                       if (sht->flags & 0x10) {
-                        struct Task *task = sht->task;
+                        task = sht->task;
                         cons_putstr(task->cons, "\nBreak(mouse) :\n");
                         io_cli();
                         task->tss.eax = (int)&(task->tss.esp0);
                         task->tss.eip = (int)asm_end_app;
+                        io_sti();
+                      } else {
+                        task = sht->task;
+                        io_cli();
+                        fifo32_put(&task->fifo, 4);
                         io_sti();
                       }
                     }
@@ -332,6 +345,8 @@ int main(void) {
             }
           }
         }
+      } else if (768 <= data && data <= 1023) {
+        close_console(shtctl->sheets0 + (data - 768));
       }
     }
   }

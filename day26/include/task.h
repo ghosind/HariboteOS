@@ -26,7 +26,7 @@ struct Task {
   struct FIFO32 fifo;
   struct TSS32 tss;
   struct Console *cons;
-  int ds_base;
+  int ds_base, cons_stack;
 };
 
 struct TaskLevel {
