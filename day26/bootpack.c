@@ -32,7 +32,8 @@ int main(void) {
   int fifobuf[128], keycmd_buf[32], *cons_fifo[2];
   int data, key_to = 0, key_shift = 0, key_ctl = 0, key_alt = 0,
             key_leds = (binfo->leds >> 4) & 7, keycmd_wait = -1;
-  int x, y, mmx = -1, mmy = -1, mmx2 = 0;
+  int x, y, mmx = -1, mmy = -1, mmx2 = 0, new_mx = -1, new_my = 0,
+            new_wx = 0x7fffffff, new_wy = 0;
 
   init_gdtidt();
   init_pic(); // GDT/IDT完成初始化，开放CPU中断
@@ -133,8 +134,18 @@ int main(void) {
 
     io_cli();
     if (fifo32_status(&fifo) == 0) {
-      task_sleep(task_a);
-      io_sti();
+      if (new_mx >= 0) {
+				io_sti();
+				sheet_slide(sht_mouse, new_mx, new_my);
+				new_mx = -1;
+			} else if (new_wx != 0x7fffffff) {
+				io_sti();
+				sheet_slide(sht, new_wx, new_wy);
+				new_wx = 0x7fffffff;
+			} else {
+				task_sleep(task_a);
+				io_sti();
+			}
     } else {
       data = fifo32_get(&fifo);
       io_sti();
@@ -173,8 +184,7 @@ int main(void) {
 
         // 回车键
         if (data == 256 + 0x1c) {
-            fifo32_put(&key_win->task->fifo, 10 + 256);
-          
+          fifo32_put(&key_win->task->fifo, 10 + 256);
         }
 
         // Tab键
@@ -285,7 +295,8 @@ int main(void) {
             my = binfo->scrny - 1;
           }
 
-          sheet_slide(sht_mouse, mx, my);
+          new_mx = mx;
+          new_my = my;
 
           if (mdec.btn & 0x01) {
             if (mmx < 0) {
@@ -301,10 +312,11 @@ int main(void) {
                       key_win = sht;
                       keywin_on(key_win);
                     }
-                    if (3 <= x && x < sht->bxsize && 3 <= y && y < 21) {
+                    if (3 <= x && x < sht->bxsize - 3 && 3 <= y && y < 21) {
                       mmx = mx;
                       mmy = my;
                       mmx2 = sht->vx0;
+                      new_wy = sht->vy0;
                     }
                     if (sht->bxsize - 21 <= x && x < sht->bxsize - 5 &&
                         5 <= y && y < 19) {
@@ -325,11 +337,16 @@ int main(void) {
             } else {
               x = mx - mmx;
               y = my - mmy;
-              sheet_slide(sht, (mmx2 + x + 2) & ~3, sht->vy0 + y);
+              new_wx = (mmx2 + x + 2) & ~3;
+              new_wy = new_wy + y;
               mmy = my;
             }
           } else {
             mmx = -1;
+            if (new_wx != 0x7fffffff) {
+              sheet_slide(sht, new_wx, new_wy);
+              new_wx = 0x7fffffff;
+            }
           }
         }
       }
