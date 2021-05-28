@@ -14,6 +14,7 @@
 #include "sheet.h"
 #include "task.h"
 #include "timer.h"
+#include "window.h"
 
 void console_task(struct Sheet *sheet, unsigned int memtotal) {
   struct Task *task = task_now();
@@ -198,4 +199,32 @@ void cons_run_cmd(char *cmdline, struct Console *cons, int *fat,
       cons_putstr(cons, "Bad command.\n\n");
     }
   }
+}
+
+struct Sheet *open_console(struct Shtctl *shtctl, unsigned int memtotal) {
+  struct MemMan *memman = (struct MemMan *)MEMMAN_ADDR;
+  struct Sheet *sht = sheet_alloc(shtctl);
+  unsigned char *buf = (unsigned char *)memman_alloc_4k(memman, 256 * 165);
+  struct Task *task = task_alloc();
+  int *cons_fifo = (int *)memman_alloc_4k(memman, 128 * 4);
+
+  sheet_setbuf(sht, buf, 256, 165, -1);
+  make_window8(buf, 256, 165, "console", 0);
+  make_textbox8(sht, 8, 28, 240, 128, COL8_000000);
+  task->tss.esp = memman_alloc_4k(memman, 64 * 1024) + 64 * 1024 - 12;
+  task->tss.eip = (int)&console_task;
+  task->tss.es = 1 * 8;
+  task->tss.cs = 2 * 8;
+  task->tss.ss = 1 * 8;
+  task->tss.ds = 1 * 8;
+  task->tss.fs = 1 * 8;
+  task->tss.gs = 1 * 8;
+  *((int *)(task->tss.esp + 4)) = (int)sht;
+  *((int *)(task->tss.esp + 8)) = memtotal;
+  task_run(task, 2, 2);
+  sht->task = task;
+  sht->flags |= 0x20;
+  fifo32_init(&task->fifo, 128, cons_fifo, task);
+
+  return sht;
 }

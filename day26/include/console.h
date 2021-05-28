@@ -17,5 +17,6 @@ void cons_newline(struct Console *cons);
 void cons_run_cmd(char *cmdline, struct Console *cons, int *fat, unsigned int memtotal);
 void cons_putstr(struct Console *cons, char *s);
 void cons_putnstr(struct Console *cons, char *s, int n);
+struct Sheet *open_console(struct Shtctl *shtctl, unsigned int memtotal);
 
 #endif // _CONSOLE_H_
