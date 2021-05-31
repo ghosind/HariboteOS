@@ -31,12 +31,7 @@ int *hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx,
     cons_putnstr(cons, (char *)ebx + ds_base, ecx);
     break;
   case 4:
-    // return &(task->tss.esp0);
-    timer_cancel(cons->timer);
-    io_cli();
-    fifo32_put(sys_fifo, cons->sheet - shtctl->sheets0 + 2024);
-    cons->sheet = NULL;
-    io_sti();
+    return &(task->tss.esp0);
     break;
   case 5:
     sht = sheet_alloc(shtctl);
@@ -45,7 +40,8 @@ int *hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx,
     sheet_setbuf(sht, (unsigned char *)(ebx + ds_base), esi, edi, eax);
     make_window8((unsigned char *)(ebx + ds_base), esi, edi,
                  (char *)(ecx + ds_base), 0);
-    sheet_slide(sht, ((shtctl->xsize - esi) / 2) & ~3, (shtctl->ysize - edi) / 2);
+    sheet_slide(sht, ((shtctl->xsize - esi) / 2) & ~3,
+                (shtctl->ysize - edi) / 2);
     sheet_updown(sht, shtctl->top);
     reg[7] = (int)sht;
     break;
@@ -124,6 +120,13 @@ int *hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx,
       if (data == 3) {
         cons->cur_c = -1;
       }
+      if (data == 4) {
+        timer_cancel(cons->timer);
+        io_cli();
+        fifo32_put(sys_fifo, cons->sheet - shtctl->sheets0 + 2024);
+        cons->sheet = NULL;
+        io_sti();
+      }
       if (256 <= data) {
         reg[7] = data - 256;
         return 0;
@@ -154,7 +157,7 @@ int *hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx,
       io_out8(0x43, 0xb6);
       io_out8(0x42, data & 0xff);
       io_out8(0x42, data >> 8);
-      
+
       data = io_in8(0x61);
       io_out8(0x61, (data | 0x03) & 0x0f);
     }
