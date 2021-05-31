@@ -52,96 +52,29 @@ asmhead.bin:
 %.bin: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
+# Applications
+app/api.lib:
+	$(AS) -f elf app/api.asm -o $@
+
 %.hrb: %.asm
-	$(AS) -f bin $< -o $@  -l $(subst .asm,.lst,$<)
+	$(AS) -f elf $< -o $@ -l $(subst .asm,.lst,$<)
 
-app/api.o:
-	$(AS) -f elf app/api.asm -o app/api.o
+app/%.o: app/%.c
+	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -I ./libc/include -c $< -o $@
 
-app/a.hrb: app/api.o
-	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/a.c -o app/a.o
-	$(LD) -m elf_i386 --oformat binary -e main app/a.o app/api.o -o app/a.hrb
+app/%.hrb: app/%.o app/api.lib 
+	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie $^ -o $@
 
-app/hello3.hrb: app/api.o
-	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/hello3.c -o app/hello3.o
-	$(LD) -m elf_i386 --oformat binary -e main app/hello3.o app/api.o -o app/hello3.hrb
+app/stars.hrb: app/stars.o app/api.lib libc/stdlib/rand.bin
+	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie $^ -o $@
 
-app/crack1.hrb: app/api.o
-	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/crack1.c -o app/crack1.o
-	$(LD) -m elf_i386 --oformat binary -e main app/crack1.o app/api.o -o app/crack1.hrb
+app/stars2.hrb: app/stars2.o app/api.lib libc/stdlib/rand.bin
+	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie $^ -o $@
 
-app/bug1.hrb: app/api.o
-	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/bug1.c -o app/bug1.o
-	$(LD) -m elf_i386 --oformat binary -e main app/bug1.o app/api.o -o app/bug1.hrb
+app/noodle.hrb: app/noodle.o app/api.lib libc/stdio/stdio.bin
+	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie $^ -o $@
 
-app/bug2.hrb:
-	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/bug2.c -o app/bug2.o
-	$(LD) -m elf_i386 --oformat binary -e main app/bug2.o -o app/bug2.hrb
-
-app/bug3.hrb: app/api.o
-	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/bug3.c -o app/bug3.o
-	$(LD) -m elf_i386 --oformat binary -e main app/bug3.o app/api.o -o app/bug3.hrb
-
-app/bug4.hrb: app/api.o
-	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/bug4.c -o app/bug4.o
-	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie app/bug4.o app/api.o -o app/bug4.hrb
-
-app/hello5.hrb:
-	$(AS) -f elf app/hello5.asm -o app/hello5.o
-	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie app/hello5.o -o app/hello5.hrb
-
-app/winhello.hrb: app/api.o
-	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/winhello.c -o app/winhello.o
-	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie app/winhello.o app/api.o -o app/winhello.hrb
-
-app/winhelo2.hrb: app/api.o
-	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/winhello2.c -o app/winhello2.o
-	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie app/winhello2.o app/api.o -o app/winhelo2.hrb
-
-app/winhelo3.hrb: app/api.o
-	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/winhello3.c -o app/winhello3.o
-	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie app/winhello3.o app/api.o -o app/winhelo3.hrb
-
-app/star1.hrb: app/api.o
-	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/star1.c -o app/star1.o
-	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie app/star1.o app/api.o -o app/star1.hrb
-
-app/stars.hrb: app/api.o libc/stdlib/rand.bin
-	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -I ./libc/include -m32 -c app/stars.c -o app/stars.o
-	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie app/stars.o app/api.o libc/stdlib/rand.bin -o app/stars.hrb
-
-app/stars2.hrb: app/api.o libc/stdlib/rand.bin
-	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -I ./libc/include -m32 -c app/stars2.c -o app/stars2.o
-	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie app/stars2.o app/api.o libc/stdlib/rand.bin -o app/stars2.hrb
-
-app/lines.hrb: app/api.o
-	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/lines.c -o app/lines.o
-	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie app/lines.o app/api.o -o app/lines.hrb
-
-app/walk.hrb: app/api.o
-	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/walk.c -o app/walk.o
-	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie app/walk.o app/api.o -o app/walk.hrb
-
-app/noodle.hrb: app/api.o libc/stdio/stdio.bin
-	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -I ./libc/include -m32 -c app/noodle.c -o app/noodle.o
-	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie app/noodle.o app/api.o libc/stdio/stdio.bin -o app/noodle.hrb
-
-app/beepdown.hrb: app/api.o
-	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/beepdown.c -o app/beepdown.o
-	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie app/beepdown.o app/api.o -o app/beepdown.hrb
-
-app/beepup.hrb: app/api.o
-	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/beepup.c -o app/beepup.o
-	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie app/beepup.o app/api.o -o app/beepup.hrb
-
-app/color.hrb: app/api.o
-	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/color.c -o app/color.o
-	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie app/color.o app/api.o -o app/color.hrb
-
-app/color2.hrb: app/api.o
-	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/color2.c -o app/color2.o
-	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie app/color2.o app/api.o -o app/color2.hrb
-
+# Kernel
 kernel.sys: ${K_OBJS} ${L_OBJS}
 	$(LD) -m elf_i386 --oformat binary -o kernel.sys -T kernel.ld $^
 
@@ -167,6 +100,7 @@ clean:
 	rm -rf app/*.hrb
 	rm -rf **/*.o
 	rm -rf **/*.lst
+	rm -rf **/*.lib
 
 qemu: clean all
 	$(QEMU) -fda $(IMG) $(QEMU_FLAGS)
