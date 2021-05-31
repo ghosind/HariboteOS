@@ -2,6 +2,7 @@
 #define _TASK_H_
 
 #include "console.h"
+#include "desctbl.h"
 #include "memory.h"
 #include "timer.h"
 
@@ -25,6 +26,7 @@ struct Task {
   int level, priority;
   struct FIFO32 fifo;
   struct TSS32 tss;
+  struct SegmentDescriptor ldt[2];
   struct Console *cons;
   int ds_base, cons_stack;
 };

@@ -11,6 +11,7 @@
 
 #define AR_DATA32_RW 0x4092
 #define AR_CODE32_ER 0x409a
+#define AR_LDT 0x0082
 #define AR_TSS32 0x0089
 #define AR_INTGATE32 0x008e
 
