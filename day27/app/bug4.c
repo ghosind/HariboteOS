@@ -1,5 +1,4 @@
-void api_putstr(char *s);
-void api_end(void);
+#include "api.h"
 
 int main() {
   api_putstr("hello world\n");

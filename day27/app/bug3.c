@@ -1,4 +1,4 @@
-void api_putchar(int c);
+#include "api.h"
 
 int main(void) {
   for (;;) {

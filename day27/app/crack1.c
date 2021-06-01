@@ -1,4 +1,4 @@
-void api_end(void);
+#include "api.h"
 
 int main() {
   *((char *) 0x00102600) = 0;
