@@ -35,7 +35,7 @@ APPS	:= app/hello.hrb app/hello2.hrb app/a.hrb app/hello3.hrb app/crack1.hrb \
 		app/winhelo3.hrb app/star1.hrb app/stars.hrb app/stars2.hrb \
 		app/lines.hrb app/walk.hrb app/noodle.hrb app/beepdown.hrb \
 		app/beepup.hrb app/color.hrb app/color2.hrb app/crack7.hrb \
-		app/sosu.hrb app/sosu2.hrb app/sosu3.hrb
+		app/sosu.hrb app/sosu2.hrb app/sosu3.hrb app/typeipl.hrb
 SYS	:= haribote.sys
 IMG	:= haribote.img
 
@@ -100,6 +100,7 @@ image: kernel/ipl.bin haribote.sys ${APPS}
 	dd if=kernel/ipl.bin of=$(IMG) bs=512 count=1 conv=notrunc
 	mcopy -i $(IMG) haribote.sys ::/
 	mcopy -i $(IMG) ${APPS} ::/
+	mcopy -i $(IMG) kernel/ipl.asm ::/
 
 all: ${L_OBJS} ${K_OBJS} ${APPS} haribote.sys image
 

@@ -1,9 +1,12 @@
 #include <stdio.h>
 
 #include "api.h"
+#include "bootpack.h"
 #include "console.h"
+#include "fs.h"
 #include "graphic.h"
 #include "io.h"
+#include "memory.h"
 #include "sheet.h"
 #include "task.h"
 #include "window.h"
@@ -16,9 +19,13 @@ int *hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx,
   struct Console *cons = task->cons;
   struct Shtctl *shtctl = (struct Shtctl *)*((int *)0x0fe4);
   struct Sheet *sht;
+  struct FileInfo *finfo;
+  struct FileHandle *fh;
+  struct MemMan *memman = (struct MemMan *)MEMMAN_ADDR;
   char s[12];
   int *reg = &eax + 1;
   int data;
+  int i;
 
   switch (edx) {
   case 1:
@@ -161,6 +168,70 @@ int *hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx,
       data = io_in8(0x61);
       io_out8(0x61, (data | 0x03) & 0x0f);
     }
+    break;
+  case 21:
+    for (i = 0; i < 8; i++) {
+      if (task->fHandle[i].buf == NULL) {
+        break;
+      }
+    }
+    fh = &task->fHandle[i];
+    reg[7] = 0;
+    if (i < 8) {
+      finfo = file_search((char *)(ebx + ds_base),
+                          (struct FileInfo *)(ADR_DISKIMG + 0x002600), 224);
+      if (finfo) {
+        reg[7] = (int)fh;
+        fh->buf = (char *)memman_alloc_4k(memman, finfo->size);
+        fh->size = finfo->size;
+        fh->pos = 0;
+        file_load_file(finfo->clustno, finfo->size, fh->buf, task->fat,
+                       (char *)(ADR_DISKIMG + 0x003e00));
+      }
+    }
+    break;
+  case 22:
+    fh = (struct FileHandle *)eax;
+    memman_free_4k(memman, (int)fh->buf, fh->size);
+    fh->buf = NULL;
+    break;
+  case 23:
+    fh = (struct FileHandle *)eax;
+    if (ecx == 0) {
+      fh->pos = ebx;
+    } else if (ecx == 1) {
+      fh->pos += ebx;
+    } else if (ecx == 2) {
+      fh->pos = fh->size + ebx;
+    }
+
+    if (fh->pos < 0) {
+      fh->pos = 0;
+    }
+    if (fh->pos > fh->size) {
+      fh->pos = fh->size;
+    }
+    break;
+  case 24:
+    fh = (struct FileHandle *)eax;
+    if (ecx == 0) {
+      reg[7] = fh->size;
+    } else if (ecx == 1) {
+      reg[7] = fh->pos;
+    } else if (ecx == 2) {
+      reg[7] = fh->pos - fh->size;
+    }
+    break;
+  case 25:
+    fh = (struct FileHandle *)eax;
+    for (i = 0; i < ecx; i++) {
+      if (fh->pos == fh->size) {
+        break;
+      }
+      *((char *)(ebx + ds_base + i)) = fh->buf[fh->pos];
+      fh->pos++;
+    }
+    reg[7] = i;
     break;
   default:
     break;

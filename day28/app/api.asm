@@ -8,6 +8,7 @@
   GLOBAL api_get_key
   GLOBAL api_alloc_timer, api_init_timer, api_set_timer, api_free_timer
   GLOBAL api_beep
+  GLOBAL api_fopen, api_fclose, api_fseek, api_fsize, api_fread
 
   GLOBAL __alloca
 
@@ -213,6 +214,47 @@ api_beep:               ; void api_beep(int tone);
   MOV     EDX, 20
   MOV     EAX, [ESP+4]
   INT     0x40
+  RET
+
+api_fopen:              ; int api_fopen(char *fname);
+  PUSH    EBX
+  MOV     EDX, 21
+  MOV     EBX, [ESP+8]
+  INT     0x40
+  POP     EBX
+  RET
+
+api_fclose:             ; void api_fclose(int fhandle);
+  MOV     EDX, 22
+  MOV     EAX, [ESP+4]
+  INT     0x40
+  RET
+
+api_fseek:              ; void api_fseek(int fhandle, int offset, int mode);
+  PUSH    EBX
+  MOV     EDX, 23
+  MOV     EAX, [ESP+8]
+  MOV     ECX, [ESP+16]
+  MOV     EBX, [ESP+12]
+  INT     0x40
+  POP     EBX
+  RET
+
+api_fsize:              ; int api_fsize(int fhandle, int mode);
+  MOV     EDX, 24
+  MOV     EAX, [ESP+4]
+  MOV     ECX, [ESP+8]
+  INT     0x40
+  RET
+
+api_fread:              ; int api_fread(char *buf, int maxsize, int fhandle);
+  PUSH    EBX
+  MOV     EDX, 25
+  MOV     EAX, [ESP+16]
+  MOV     ECX, [ESP+12]
+  MOV     EBX, [ESP+8]
+  INT     0x40
+  POP     EBX
   RET
 
 __alloca:               ; 修改后添加无效

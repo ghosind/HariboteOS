@@ -3,6 +3,7 @@
 
 #include "console.h"
 #include "desctbl.h"
+#include "fs.h"
 #include "memory.h"
 #include "timer.h"
 
@@ -29,6 +30,8 @@ struct Task {
   struct SegmentDescriptor ldt[2];
   struct Console *cons;
   int ds_base, cons_stack;
+  struct FileHandle *fHandle;
+  int *fat;
 };
 
 struct TaskLevel {

@@ -24,6 +24,7 @@ void console_task(struct Sheet *sheet, unsigned int memtotal) {
   struct SegmentDescriptor *gdt = (struct SegmentDescriptor *)ADR_GDT;
   int x, y;
   struct Console cons;
+  struct FileHandle fHandle[8];
 
   cons.sheet = sheet;
   cons.cur_x = 8;
@@ -38,6 +39,11 @@ void console_task(struct Sheet *sheet, unsigned int memtotal) {
   }
 
   file_read_fat(fat, (unsigned char *)(ADR_DISKIMG + 0x000200));
+  for (int i = 0; i < 8; i++) {
+    fHandle[i].buf = NULL;
+  }
+  task->fHandle = fHandle;
+  task->fat = fat;
 
   cons_putchar(&cons, '>', 1);
 
