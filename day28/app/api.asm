@@ -9,6 +9,7 @@
   GLOBAL api_alloc_timer, api_init_timer, api_set_timer, api_free_timer
   GLOBAL api_beep
   GLOBAL api_fopen, api_fclose, api_fseek, api_fsize, api_fread
+  GLOBAL api_cmdline
 
   GLOBAL __alloca
 
@@ -251,6 +252,15 @@ api_fread:              ; int api_fread(char *buf, int maxsize, int fhandle);
   PUSH    EBX
   MOV     EDX, 25
   MOV     EAX, [ESP+16]
+  MOV     ECX, [ESP+12]
+  MOV     EBX, [ESP+8]
+  INT     0x40
+  POP     EBX
+  RET
+
+api_cmdline:            ; int api_cmdline(char *buf, int maxsize);
+  PUSH    EBX
+  MOV     EDX, 26
   MOV     ECX, [ESP+12]
   MOV     EBX, [ESP+8]
   INT     0x40

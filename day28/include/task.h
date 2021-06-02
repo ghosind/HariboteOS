@@ -32,6 +32,7 @@ struct Task {
   int ds_base, cons_stack;
   struct FileHandle *fHandle;
   int *fat;
+  char *cmdline;
 };
 
 struct TaskLevel {

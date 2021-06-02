@@ -31,6 +31,7 @@ void console_task(struct Sheet *sheet, unsigned int memtotal) {
   cons.cur_y = 28;
   cons.cur_c = -1;
   task->cons = &cons;
+  task->cmdline = cmdline;
 
   if (cons.sheet) {
     cons.timer = timer_alloc();

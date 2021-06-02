@@ -233,6 +233,23 @@ int *hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx,
     }
     reg[7] = i;
     break;
+  case 26:
+    i = 0;
+    for (;;) {
+      *((char *)(ebx + ds_base) + i) = task->cmdline[i];
+      if (task->cmdline[i] == '\0') {
+        break;
+      }
+
+      if (i >= ecx) {
+        break;
+      }
+
+      i++;
+    }
+
+    reg[7] = i;
+    break;
   default:
     break;
   }
