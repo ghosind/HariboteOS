@@ -47,6 +47,27 @@ $ make qemu GCCPREFIX=x86_64-elf-
 $ make qemu DEBUG=1
 ```
 
+## 最终目录结构
+
+- `app`：应用程序源码
+- `include`：系统内核头文件
+- `kernel`：系统内核代码
+- `libc`：简单的C标准库部分实现
+
+## C标准库实现
+
+- `strcmp`
+- `strncmp`
+
+参考自xv6实现：
+
+- `vsprintf`
+- `sprintf`
+
+来自《C程序设计语言》：
+
+- `rand`
+
 ## 项目进度
 
 - [X] 第1天：Hello world
