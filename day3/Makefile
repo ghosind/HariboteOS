@@ -6,7 +6,7 @@ AS		:= nasm
 CC		:= $(GCCPREFIX)gcc
 LD		:= $(GCCPREFIX)ld
 OBJCOPY	:= $(GCCPREFIX)objcopy
-CFLAGS	:= -Wall -m32
+CFLAGS	:= -Wall -m32 -fno-pie
 QEMU	:= qemu-system-i386
 
 OBJS	:= ipl.bin asmhead.bin bootpack.bin func.bin

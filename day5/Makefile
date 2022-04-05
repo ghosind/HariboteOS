@@ -12,6 +12,7 @@ CFLAGS += -Wall -Wno-format -Wno-unused
 CFLAGS += -std=gnu99 -static -m32
 CFLAGS += -I./libc/include
 CFLAGS += -ffunction-sections -nostdlib -nostdinc -fno-builtin -ffreestanding
+CFLAGS += -fno-pie
 
 QEMU_FLAGS 	+= -no-reboot -d in_asm
 
