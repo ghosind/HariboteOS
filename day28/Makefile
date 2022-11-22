@@ -52,6 +52,9 @@ kernel/ipl.bin:
 kernel/asmhead.bin:
 	$(AS) -f bin kernel/asmhead.asm -o kernel/asmhead.bin -l kernel/asmhead.lst
 
+kernel/hankaku.bin: ../hankaku/hankaku.asm
+	$(AS) -f elf $< -o $@
+
 kernel/%.bin: kernel/%.asm
 	$(AS) -f elf $< -o $@ -l $(subst .asm,.lst,$<)
 
@@ -68,7 +71,7 @@ app/api.lib:
 app/%.o: app/%.c
 	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -I ./libc/include -c $< -o $@
 
-app/%.hrb: app/%.o app/api.lib 
+app/%.hrb: app/%.o app/api.lib
 	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie $^ -o $@
 
 app/stars.hrb: app/stars.o app/api.lib libc/stdlib/rand.bin

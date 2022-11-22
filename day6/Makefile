@@ -35,6 +35,9 @@ ipl.bin:
 asmhead.bin:
 	$(AS) -f bin asmhead.asm -o asmhead.bin -l asmhead.lst
 
+hankaku.bin: ../hankaku/hankaku.asm
+	$(AS) -f elf $< -o $@
+
 %.bin: %.asm
 	$(AS) -f elf $< -o $@ -l $(subst .asm,.lst,$<)
 
