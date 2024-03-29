@@ -8,16 +8,18 @@ LD	:= $(GCCPREFIX)ld
 OBJCOPY	:= $(GCCPREFIX)objcopy
 QEMU	:= qemu-system-i386
 
+LIBC_DIR := ../libc
+
 CFLAGS += -Wall -Wno-format -Wno-unused
 CFLAGS += -std=gnu99 -static -m32
-CFLAGS += -I ./include -I ./libc/include
+CFLAGS += -I ./include -I $(LIBC_DIR)/include
 CFLAGS += -ffunction-sections -nostdlib -nostdinc -fno-builtin -ffreestanding
 CFLAGS += -fno-pie
 
 QEMU_FLAGS 	+= -no-reboot -d in_asm -m size=128
 
 # C Library Objects
-L_OBJS  := libc/stdio/stdio.bin libc/string/strcmp.bin
+L_OBJS  := $(LIBC_DIR)/stdio/stdio.bin $(LIBC_DIR)/string/strcmp.bin
 # Kernel Objects
 K_OBJS	:= bootpack.bin io.bin pm.bin hankaku.bin desctbl.bin graphic.bin \
 		int.bin inthandler.bin fifo.bin keyboard.bin mouse.bin \
@@ -67,6 +69,7 @@ clean:
 	rm -rf *.lst
 	rm -rf $(IMG)
 	rm -rf **/**/*.bin
+	rm -rf $(LIBC_DIR)/**/*.bin
 
 qemu: clean all
 	$(QEMU) -fda $(IMG) $(QEMU_FLAGS)

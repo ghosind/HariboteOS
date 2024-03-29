@@ -8,17 +8,19 @@ LD	:= $(GCCPREFIX)ld
 OBJCOPY	:= $(GCCPREFIX)objcopy
 QEMU	:= qemu-system-i386
 
+LIBC_DIR := ../libc
+
 CFLAGS += -Wall -Wno-format -Wno-unused
 CFLAGS += -std=gnu99 -static -m32
-CFLAGS += -I ./include -I ./libc/include
+CFLAGS += -I ./include -I $(LIBC_DIR)/include
 CFLAGS += -ffunction-sections -nostdlib -nostdinc -fno-builtin -ffreestanding
 CFLAGS += -fno-pie
 
 QEMU_FLAGS 	+= -no-reboot -d in_asm -m size=128
 
 # C Library Objects
-L_OBJS  := libc/stdio/stdio.bin libc/string/strcmp.bin libc/string/strncmp.bin \
-		libc/stdlib/rand.bin
+L_OBJS  := $(LIBC_DIR)/stdio/stdio.bin $(LIBC_DIR)/string/strcmp.bin \
+		$(LIBC_DIR)/string/strncmp.bin $(LIBC_DIR)/stdlib/rand.bin
 # Kernel Objects
 K_OBJS	:= bootpack.bin io.bin pm.bin hankaku.bin desctbl.bin graphic.bin \
 		int.bin inthandler.bin fifo.bin keyboard.bin mouse.bin \
@@ -110,13 +112,13 @@ app/star1.hrb: app/api.o
 	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/star1.c -o app/star1.o
 	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie app/star1.o app/api.o -o app/star1.hrb
 
-app/stars.hrb: app/api.o libc/stdlib/rand.bin
-	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -I ./libc/include -m32 -c app/stars.c -o app/stars.o
-	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie app/stars.o app/api.o libc/stdlib/rand.bin -o app/stars.hrb
+app/stars.hrb: app/api.o $(LIBC_DIR)/stdlib/rand.bin
+	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -I $(LIBC_DIR)/include -m32 -c app/stars.c -o app/stars.o
+	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie app/stars.o app/api.o $(LIBC_DIR)/stdlib/rand.bin -o app/stars.hrb
 
-app/stars2.hrb: app/api.o libc/stdlib/rand.bin
-	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -I ./libc/include -m32 -c app/stars2.c -o app/stars2.o
-	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie app/stars2.o app/api.o libc/stdlib/rand.bin -o app/stars2.hrb
+app/stars2.hrb: app/api.o $(LIBC_DIR)/stdlib/rand.bin
+	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -I $(LIBC_DIR)/include -m32 -c app/stars2.c -o app/stars2.o
+	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie app/stars2.o app/api.o $(LIBC_DIR)/stdlib/rand.bin -o app/stars2.hrb
 
 app/lines.hrb: app/api.o
 	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/lines.c -o app/lines.o
@@ -126,9 +128,9 @@ app/walk.hrb: app/api.o
 	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/walk.c -o app/walk.o
 	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie app/walk.o app/api.o -o app/walk.hrb
 
-app/noodle.hrb: app/api.o libc/stdio/stdio.bin
-	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -I ./libc/include -m32 -c app/noodle.c -o app/noodle.o
-	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie app/noodle.o app/api.o libc/stdio/stdio.bin -o app/noodle.hrb
+app/noodle.hrb: app/api.o $(LIBC_DIR)/stdio/stdio.bin
+	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -I $(LIBC_DIR)/include -m32 -c app/noodle.c -o app/noodle.o
+	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie app/noodle.o app/api.o $(LIBC_DIR)/stdio/stdio.bin -o app/noodle.hrb
 
 app/beepdown.hrb: app/api.o
 	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/beepdown.c -o app/beepdown.o
@@ -171,6 +173,7 @@ clean:
 	rm -rf app/*.hrb
 	rm -rf **/*.o
 	rm -rf **/*.lst
+	rm -rf $(LIBC_DIR)/**/*.bin
 
 qemu: clean all
 	$(QEMU) -fda $(IMG) $(QEMU_FLAGS)
