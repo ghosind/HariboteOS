@@ -17,6 +17,7 @@ CFLAGS += -ffunction-sections -nostdlib -nostdinc -fno-builtin -ffreestanding
 CFLAGS += -fno-pie
 
 APP_CFLAGS = -Wall -Wno-format -Wno-unused -std=gnu99 -fno-pie -m32
+APP_LDFLAGS = -m elf_i386 --oformat elf32-i386 -e main -pie
 
 QEMU_FLAGS 	+= -no-reboot -d in_asm -m size=128
 
@@ -76,46 +77,46 @@ app/%.o: app/%.c
 	$(CC) $(APP_CFLAGS) -I $(LIBC_DIR)/include -c $< -o $@
 
 app/bug1.o:
-	$(CC) $(APP_CFLAGS) -fno-stack-protector -c app/bug1.c -o app/bug1.o
+	$(CC) $(APP_CFLAGS) -fno-stack-protector -I $(LIBC_DIR)/include -c app/bug1.c -o app/bug1.o
 
 app/noodle.o:
-	$(CC) $(APP_CFLAGS) -fno-stack-protector -c app/noodle.c -o app/noodle.o
+	$(CC) $(APP_CFLAGS) -fno-stack-protector -I $(LIBC_DIR)/include -c app/noodle.c -o app/noodle.o
 
 app/sosu.o:
-	$(CC) $(APP_CFLAGS) -fno-stack-protector -c app/sosu.c -o app/sosu.o
+	$(CC) $(APP_CFLAGS) -fno-stack-protector -I $(LIBC_DIR)/include -c app/sosu.c -o app/sosu.o
 
 app/sosu2.o:
-	$(CC) $(APP_CFLAGS) -fno-stack-protector -c app/sosu2.c -o app/sosu2.o
+	$(CC) $(APP_CFLAGS) -fno-stack-protector -I $(LIBC_DIR)/include -c app/sosu2.c -o app/sosu2.o
 
 app/sosu3.o:
-	$(CC) $(APP_CFLAGS) -fno-stack-protector -c app/sosu3.c -o app/sosu3.o
+	$(CC) $(APP_CFLAGS) -fno-stack-protector -I $(LIBC_DIR)/include -c app/sosu3.c -o app/sosu3.o
 
 app/typeipl.o:
-	$(CC) $(APP_CFLAGS) -fno-stack-protector -c app/typeipl.c -o app/typeipl.o
+	$(CC) $(APP_CFLAGS) -fno-stack-protector -I $(LIBC_DIR)/include -c app/typeipl.c -o app/typeipl.o
 
 app/cat.o:
-	$(CC) $(APP_CFLAGS) -fno-stack-protector -c app/cat.c -o app/cat.o
+	$(CC) $(APP_CFLAGS) -fno-stack-protector -I $(LIBC_DIR)/include -c app/cat.c -o app/cat.o
 
 app/%.hrb: app/%.o app/api.lib
-	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie $^ -o $@
+	$(LD) $(APP_LDFLAGS) $^ -o $@
 
 app/stars.hrb: app/stars.o app/api.lib $(LIBC_DIR)/stdlib/rand.bin
-	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie $^ -o $@
+	$(LD) $(APP_LDFLAGS) $^ -o $@
 
 app/stars2.hrb: app/stars2.o app/api.lib $(LIBC_DIR)/stdlib/rand.bin
-	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie $^ -o $@
+	$(LD) $(APP_LDFLAGS) $^ -o $@
 
 app/noodle.hrb: app/noodle.o app/api.lib $(LIBC_DIR)/stdio/stdio.bin
-	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie $^ -o $@
+	$(LD) $(APP_LDFLAGS) $^ -o $@
 
 app/sosu.hrb: app/sosu.o app/api.lib $(LIBC_DIR)/stdio/stdio.bin
-	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie $^ -o $@
+	$(LD) $(APP_LDFLAGS) $^ -o $@
 
 app/sosu2.hrb: app/sosu2.o app/api.lib $(LIBC_DIR)/stdio/stdio.bin
-	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie $^ -o $@
+	$(LD) $(APP_LDFLAGS) $^ -o $@
 
 app/sosu3.hrb: app/sosu3.o app/api.lib $(LIBC_DIR)/stdio/stdio.bin
-	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie $^ -o $@
+	$(LD) $(APP_LDFLAGS) $^ -o $@
 
 # Kernel
 kernel/kernel.sys: ${K_OBJS} ${L_OBJS}

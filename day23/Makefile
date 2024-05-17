@@ -17,6 +17,8 @@ CFLAGS += -ffunction-sections -nostdlib -nostdinc -fno-builtin -ffreestanding
 CFLAGS += -fno-pie
 
 APP_CFLAGS = -Wall -Wno-format -Wno-unused -std=gnu99 -fno-pie -m32
+APP_LDFLAGS = -m elf_i386 --oformat binary -e main
+APP_ELF_LDFLAGS	= -m elf_i386 --oformat elf32-i386 -e main -pie
 
 QEMU_FLAGS 	+= -no-reboot -d in_asm -m size=128
 
@@ -67,67 +69,67 @@ app/api.o:
 
 app/a.hrb: app/api.o
 	$(CC) $(APP_CFLAGS) -c app/a.c -o app/a.o
-	$(LD) -m elf_i386 --oformat binary -e main app/a.o app/api.o -o app/a.hrb
+	$(LD) $(APP_LDFLAGS) app/a.o app/api.o -o app/a.hrb
 
 app/hello3.hrb: app/api.o
 	$(CC) $(APP_CFLAGS) -c app/hello3.c -o app/hello3.o
-	$(LD) -m elf_i386 --oformat binary -e main app/hello3.o app/api.o -o app/hello3.hrb
+	$(LD) $(APP_LDFLAGS) app/hello3.o app/api.o -o app/hello3.hrb
 
 app/crack1.hrb: app/api.o
 	$(CC) $(APP_CFLAGS) -c app/crack1.c -o app/crack1.o
-	$(LD) -m elf_i386 --oformat binary -e main app/crack1.o app/api.o -o app/crack1.hrb
+	$(LD) $(APP_LDFLAGS) app/crack1.o app/api.o -o app/crack1.hrb
 
 app/bug1.hrb: app/api.o
 	$(CC) $(APP_CFLAGS) -c app/bug1.c -fno-stack-protector -o app/bug1.o
-	$(LD) -m elf_i386 --oformat binary -e main app/bug1.o app/api.o -o app/bug1.hrb
+	$(LD) $(APP_LDFLAGS) app/bug1.o app/api.o -o app/bug1.hrb
 
 app/bug2.hrb:
 	$(CC) $(APP_CFLAGS) -c app/bug2.c -o app/bug2.o
-	$(LD) -m elf_i386 --oformat binary -e main app/bug2.o -o app/bug2.hrb
+	$(LD) $(APP_LDFLAGS) app/bug2.o -o app/bug2.hrb
 
 app/bug3.hrb: app/api.o
 	$(CC) $(APP_CFLAGS) -c app/bug3.c -o app/bug3.o
-	$(LD) -m elf_i386 --oformat binary -e main app/bug3.o app/api.o -o app/bug3.hrb
+	$(LD) $(APP_LDFLAGS) app/bug3.o app/api.o -o app/bug3.hrb
 
 app/bug4.hrb: app/api.o
 	$(CC) $(APP_CFLAGS) -c app/bug4.c -o app/bug4.o
-	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie app/bug4.o app/api.o -o app/bug4.hrb
+	$(LD) $(APP_ELF_LDFLAGS) app/bug4.o app/api.o -o app/bug4.hrb
 
 app/hello5.hrb:
 	$(AS) -f elf app/hello5.asm -o app/hello5.o
-	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie app/hello5.o -o app/hello5.hrb
+	$(LD) $(APP_ELF_LDFLAGS) app/hello5.o -o app/hello5.hrb
 
 app/winhello.hrb: app/api.o
 	$(CC) $(APP_CFLAGS) -c app/winhello.c -o app/winhello.o
-	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie app/winhello.o app/api.o -o app/winhello.hrb
+	$(LD) $(APP_ELF_LDFLAGS) app/winhello.o app/api.o -o app/winhello.hrb
 
 app/winhelo2.hrb: app/api.o
 	$(CC) $(APP_CFLAGS) -c app/winhello2.c -o app/winhello2.o
-	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie app/winhello2.o app/api.o -o app/winhelo2.hrb
+	$(LD) $(APP_ELF_LDFLAGS) app/winhello2.o app/api.o -o app/winhelo2.hrb
 
 app/winhelo3.hrb: app/api.o
 	$(CC) $(APP_CFLAGS) -c app/winhello3.c -o app/winhello3.o
-	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie app/winhello3.o app/api.o -o app/winhelo3.hrb
+	$(LD) $(APP_ELF_LDFLAGS) app/winhello3.o app/api.o -o app/winhelo3.hrb
 
 app/star1.hrb: app/api.o
 	$(CC) $(APP_CFLAGS) -c app/star1.c -o app/star1.o
-	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie app/star1.o app/api.o -o app/star1.hrb
+	$(LD) $(APP_ELF_LDFLAGS) app/star1.o app/api.o -o app/star1.hrb
 
 app/stars.hrb: app/api.o $(LIBC_DIR)/stdlib/rand.bin
 	$(CC) $(APP_CFLAGS) -I $(LIBC_DIR)/include -c app/stars.c -o app/stars.o
-	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie app/stars.o app/api.o $(LIBC_DIR)/stdlib/rand.bin -o app/stars.hrb
+	$(LD) $(APP_ELF_LDFLAGS) app/stars.o app/api.o $(LIBC_DIR)/stdlib/rand.bin -o app/stars.hrb
 
 app/stars2.hrb: app/api.o $(LIBC_DIR)/stdlib/rand.bin
 	$(CC) $(APP_CFLAGS) -I $(LIBC_DIR)/include -c app/stars2.c -o app/stars2.o
-	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie app/stars2.o app/api.o $(LIBC_DIR)/stdlib/rand.bin -o app/stars2.hrb
+	$(LD) $(APP_ELF_LDFLAGS) app/stars2.o app/api.o $(LIBC_DIR)/stdlib/rand.bin -o app/stars2.hrb
 
 app/lines.hrb: app/api.o
 	$(CC) $(APP_CFLAGS) -c app/lines.c -o app/lines.o
-	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie app/lines.o app/api.o -o app/lines.hrb
+	$(LD) $(APP_ELF_LDFLAGS) app/lines.o app/api.o -o app/lines.hrb
 
 app/walk.hrb: app/api.o
 	$(CC) $(APP_CFLAGS) -c app/walk.c -o app/walk.o
-	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie app/walk.o app/api.o -o app/walk.hrb
+	$(LD) $(APP_ELF_LDFLAGS) app/walk.o app/api.o -o app/walk.hrb
 
 kernel.sys: ${K_OBJS} ${L_OBJS}
 	$(LD) -m elf_i386 --oformat binary -o kernel.sys -T kernel.ld $^

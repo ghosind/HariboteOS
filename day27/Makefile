@@ -17,6 +17,7 @@ CFLAGS += -ffunction-sections -nostdlib -nostdinc -fno-builtin -ffreestanding
 CFLAGS += -fno-pie
 
 APP_CFLAGS = -Wall -Wno-format -Wno-unused -std=gnu99 -fno-pie -m32
+APP_LDFLAGS	= -m elf_i386 --oformat elf32-i386 -e main -pie
 
 QEMU_FLAGS 	+= -no-reboot -d in_asm -m size=128
 
@@ -77,19 +78,19 @@ app/bug1.o:
 	$(CC) $(APP_CFLAGS) -fno-stack-protector -c app/bug1.c -o app/bug1.o
 
 app/noodle.o:
-	$(CC) $(APP_CFLAGS) -fno-stack-protector -c app/noodle.c -o app/noodle.o
+	$(CC) $(APP_CFLAGS) -fno-stack-protector -I $(LIBC_DIR)/include  -c app/noodle.c -o app/noodle.o
 
 app/%.hrb: app/%.o app/api.lib
-	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie $^ -o $@
+	$(LD) $(APP_LDFLAGS) $^ -o $@
 
 app/stars.hrb: app/stars.o app/api.lib $(LIBC_DIR)/stdlib/rand.bin
-	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie $^ -o $@
+	$(LD) $(APP_LDFLAGS) $^ -o $@
 
 app/stars2.hrb: app/stars2.o app/api.lib $(LIBC_DIR)/stdlib/rand.bin
-	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie $^ -o $@
+	$(LD) $(APP_LDFLAGS) $^ -o $@
 
 app/noodle.hrb: app/noodle.o app/api.lib $(LIBC_DIR)/stdio/stdio.bin
-	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie $^ -o $@
+	$(LD) $(APP_LDFLAGS) $^ -o $@
 
 # Kernel
 kernel/kernel.sys: ${K_OBJS} ${L_OBJS}
