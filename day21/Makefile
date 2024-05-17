@@ -16,6 +16,8 @@ CFLAGS += -I ./include -I $(LIBC_DIR)/include
 CFLAGS += -ffunction-sections -nostdlib -nostdinc -fno-builtin -ffreestanding
 CFLAGS += -fno-pie
 
+APP_CFLAGS = -Wall -Wno-format -Wno-unused -std=gnu99 -fno-pie -m32
+
 QEMU_FLAGS 	+= -no-reboot -d in_asm -m size=128
 
 # C Library Objects
@@ -59,15 +61,15 @@ app/a_asm.o:
 	$(AS) -f elf app/a_asm.asm -o app/a_asm.o
 
 app/a.hrb: app/a_asm.o
-	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/a.c -o app/a.o
+	$(CC) $(APP_CFLAGS) -c app/a.c -o app/a.o
 	$(LD) -m elf_i386 --oformat binary -e main app/a.o app/a_asm.o -o app/a.hrb
 
 app/hello3.hrb: app/a_asm.o
-	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/hello3.c -o app/hello3.o
+	$(CC) $(APP_CFLAGS) -c app/hello3.c -o app/hello3.o
 	$(LD) -m elf_i386 --oformat binary -e main app/hello3.o app/a_asm.o -o app/hello3.hrb
 
 app/crack1.hrb: app/a_asm.o
-	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/crack1.c -o app/crack1.o
+	$(CC)  $(APP_CFLAGS) -c app/crack1.c -o app/crack1.o
 	$(LD) -m elf_i386 --oformat binary -e main app/crack1.o app/a_asm.o -o app/crack1.hrb
 
 kernel.sys: ${K_OBJS} ${L_OBJS}

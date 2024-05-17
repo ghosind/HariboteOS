@@ -16,6 +16,8 @@ CFLAGS += -I ./include -I $(LIBC_DIR)/include
 CFLAGS += -ffunction-sections -nostdlib -nostdinc -fno-builtin -ffreestanding
 CFLAGS += -fno-pie
 
+APP_CFLAGS = -Wall -Wno-format -Wno-unused -std=gnu99 -fno-pie -m32
+
 QEMU_FLAGS 	+= -no-reboot -d in_asm -m size=128
 
 # C Library Objects
@@ -69,7 +71,13 @@ app/api.lib:
 	$(AS) -f elf $< -o $@ -l $(subst .asm,.lst,$<)
 
 app/%.o: app/%.c
-	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -I $(LIBC_DIR)/include -c $< -o $@
+	$(CC) $(APP_CFLAGS) -I $(LIBC_DIR)/include -c $< -o $@
+
+app/bug1.o:
+	$(CC) $(APP_CFLAGS) -fno-stack-protector -c app/bug1.c -o app/bug1.o
+
+app/noodle.o:
+	$(CC) $(APP_CFLAGS) -fno-stack-protector -c app/noodle.c -o app/noodle.o
 
 app/%.hrb: app/%.o app/api.lib
 	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie $^ -o $@

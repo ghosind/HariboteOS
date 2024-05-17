@@ -16,6 +16,8 @@ CFLAGS += -I ./include -I $(LIBC_DIR)/include
 CFLAGS += -ffunction-sections -nostdlib -nostdinc -fno-builtin -ffreestanding
 CFLAGS += -fno-pie
 
+APP_CFLAGS = -Wall -Wno-format -Wno-unused -std=gnu99 -fno-pie -m32
+
 QEMU_FLAGS 	+= -no-reboot -d in_asm -m size=128
 
 # C Library Objects
@@ -61,31 +63,31 @@ app/api.o:
 	$(AS) -f elf app/api.asm -o app/api.o
 
 app/a.hrb: app/api.o
-	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/a.c -o app/a.o
+	$(CC) $(APP_CFLAGS) -c app/a.c -o app/a.o
 	$(LD) -m elf_i386 --oformat binary -e main app/a.o app/api.o -o app/a.hrb
 
 app/hello3.hrb: app/api.o
-	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/hello3.c -o app/hello3.o
+	$(CC) $(APP_CFLAGS) -c app/hello3.c -o app/hello3.o
 	$(LD) -m elf_i386 --oformat binary -e main app/hello3.o app/api.o -o app/hello3.hrb
 
 app/crack1.hrb: app/api.o
-	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/crack1.c -o app/crack1.o
+	$(CC) $(APP_CFLAGS) -c app/crack1.c -o app/crack1.o
 	$(LD) -m elf_i386 --oformat binary -e main app/crack1.o app/api.o -o app/crack1.hrb
 
 app/bug1.hrb: app/api.o
-	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/bug1.c -o app/bug1.o
+	$(CC) $(APP_CFLAGS) -fno-stack-protector -c app/bug1.c -o app/bug1.o
 	$(LD) -m elf_i386 --oformat binary -e main app/bug1.o app/api.o -o app/bug1.hrb
 
 app/bug2.hrb:
-	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/bug2.c -o app/bug2.o
+	$(CC) $(APP_CFLAGS) -c app/bug2.c -o app/bug2.o
 	$(LD) -m elf_i386 --oformat binary -e main app/bug2.o -o app/bug2.hrb
 
 app/bug3.hrb: app/api.o
-	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/bug3.c -o app/bug3.o
+	$(CC) $(APP_CFLAGS) -c app/bug3.c -o app/bug3.o
 	$(LD) -m elf_i386 --oformat binary -e main app/bug3.o app/api.o -o app/bug3.hrb
 
 app/bug4.hrb: app/api.o
-	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/bug4.c -o app/bug4.o
+	$(CC) $(APP_CFLAGS) -c app/bug4.c -o app/bug4.o
 	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie app/bug4.o app/api.o -o app/bug4.hrb
 
 app/hello5.hrb:
@@ -93,11 +95,11 @@ app/hello5.hrb:
 	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie app/hello5.o -o app/hello5.hrb
 
 app/winhello.hrb: app/api.o
-	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/winhello.c -o app/winhello.o
+	$(CC) $(APP_CFLAGS) -c app/winhello.c -o app/winhello.o
 	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie app/winhello.o app/api.o -o app/winhello.hrb
 
 app/winhelo2.hrb: app/api.o
-	$(CC) -Wall -Wno-format -Wno-unused -std=gnu99 -m32 -c app/winhello2.c -o app/winhello2.o
+	$(CC) $(APP_CFLAGS) -c app/winhello2.c -o app/winhello2.o
 	$(LD) -m elf_i386 --oformat elf32-i386 -e main -pie app/winhello2.o app/api.o -o app/winhelo2.hrb
 
 kernel.sys: ${K_OBJS} ${L_OBJS}
