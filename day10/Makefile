@@ -1,36 +1,9 @@
-ifndef GCCPREFIX
-GCCPREFIX :=
-endif
+include ../Make.defines
 
-AS	:= nasm
-CC	:= $(GCCPREFIX)gcc
-LD	:= $(GCCPREFIX)ld
-OBJCOPY	:= $(GCCPREFIX)objcopy
-QEMU	:= qemu-system-i386
-
-LIBC_DIR := ../libc
-
-CFLAGS += -Wall -Wno-format -Wno-unused
-CFLAGS += -std=gnu99 -static -m32
-CFLAGS += -I ./include -I $(LIBC_DIR)/include
-CFLAGS += -ffunction-sections -nostdlib -nostdinc -fno-builtin -ffreestanding
-CFLAGS += -fno-pie
-
-QEMU_FLAGS 	+= -no-reboot -d in_asm -m size=128
-
-# C Library Objects
-L_OBJS  := $(LIBC_DIR)/stdio/stdio.bin $(LIBC_DIR)/ssp/ssp.bin
 # Kernel Objects
 K_OBJS	:= bootpack.bin io.bin pm.bin hankaku.bin desctbl.bin graphic.bin \
 		int.bin inthandler.bin fifo.bin keyboard.bin mouse.bin \
 		memory.bin sheet.bin
-SYS	:= haribote.sys
-IMG	:= haribote.img
-
-ifdef DEBUG
-QEMU_FLAGS += -gdb tcp::1234 -S
-CFLAGS += -g
-endif
 
 ipl.bin:
 	$(AS) -f bin ipl.asm -o ipl.bin -l ipl.lst
@@ -60,18 +33,6 @@ image: ipl.bin haribote.sys
 	dd if=haribote.sys of=$(IMG) seek=33 bs=512 conv=notrunc
 
 all: ${OBJS} haribote.sys image
-
-clean:
-	rm -rf *.bin
-	rm -rf *.sys
-	rm -rf *.obj
-	rm -rf *.lst
-	rm -rf $(IMG)
-	rm -rf **/**/*.bin
-	rm -rf $(LIBC_DIR)/**/*.bin
-
-qemu: clean all
-	$(QEMU) -fda $(IMG) $(QEMU_FLAGS)
 
 .PHONY:
 	all

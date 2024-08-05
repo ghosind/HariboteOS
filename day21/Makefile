@@ -1,29 +1,5 @@
-ifndef GCCPREFIX
-GCCPREFIX :=
-endif
+include ../Make.defines
 
-AS	:= nasm
-CC	:= $(GCCPREFIX)gcc
-LD	:= $(GCCPREFIX)ld
-OBJCOPY	:= $(GCCPREFIX)objcopy
-QEMU	:= qemu-system-i386
-
-LIBC_DIR := ../libc
-
-CFLAGS += -Wall -Wno-format -Wno-unused
-CFLAGS += -std=gnu99 -static -m32
-CFLAGS += -I ./include -I $(LIBC_DIR)/include
-CFLAGS += -ffunction-sections -nostdlib -nostdinc -fno-builtin -ffreestanding
-CFLAGS += -fno-pie
-
-APP_CFLAGS 	= -Wall -Wno-format -Wno-unused -std=gnu99 -fno-pie -m32
-APP_LDFLAGS = -m elf_i386 --oformat binary -e main
-
-QEMU_FLAGS 	+= -no-reboot -d in_asm -m size=128
-
-# C Library Objects
-L_OBJS  := $(LIBC_DIR)/stdio/stdio.bin $(LIBC_DIR)/string/strcmp.bin \
-		$(LIBC_DIR)/string/strncmp.bin $(LIBC_DIR)/ssp/ssp.bin
 # Kernel Objects
 K_OBJS	:= bootpack.bin io.bin pm.bin hankaku.bin desctbl.bin graphic.bin \
 		int.bin inthandler.bin fifo.bin keyboard.bin mouse.bin \
@@ -33,13 +9,6 @@ K_OBJS	:= bootpack.bin io.bin pm.bin hankaku.bin desctbl.bin graphic.bin \
 # Applications
 APPS	:= app/hello.hrb app/hello2.hrb app/a.hrb app/hello3.hrb app/crack1.hrb \
 		app/crack2.hrb
-SYS	:= haribote.sys
-IMG	:= haribote.img
-
-ifdef DEBUG
-QEMU_FLAGS += -gdb tcp::1234 -S
-CFLAGS += -g
-endif
 
 ipl.bin:
 	$(AS) -f bin ipl.asm -o ipl.bin -l ipl.lst
@@ -88,21 +57,6 @@ image: ipl.bin haribote.sys ${APPS}
 	mcopy -i $(IMG) ${APPS} ::/
 
 all: ${L_OBJS} ${K_OBJS} ${APPS} haribote.sys image
-
-clean:
-	rm -rf *.bin
-	rm -rf *.sys
-	rm -rf *.obj
-	rm -rf *.lst
-	rm -rf $(IMG)
-	rm -rf **/**/*.bin
-	rm -rf app/*.hrb
-	rm -rf **/*.o
-	rm -rf **/*.lst
-	rm -rf $(LIBC_DIR)/**/*.bin
-
-qemu: clean all
-	$(QEMU) -fda $(IMG) $(QEMU_FLAGS)
 
 .PHONY:
 	all
