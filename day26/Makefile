@@ -62,63 +62,63 @@ app/bug3.hrb: app/api.o
 
 app/bug4.hrb: app/api.o
 	$(CC) $(APP_CFLAGS) -c app/bug4.c -o app/bug4.o
-	$(LD) $(APP_ELF_LDFLAGS) app/bug4.o app/api.o -o app/bug4.hrb
+	$(LD) $(APP_LDFLAGS) app/bug4.o app/api.o -o app/bug4.hrb
 
 app/hello5.hrb:
 	$(AS) -f elf app/hello5.asm -o app/hello5.o
-	$(LD) $(APP_ELF_LDFLAGS) app/hello5.o -o app/hello5.hrb
+	$(LD) $(APP_LDFLAGS) app/hello5.o -o app/hello5.hrb
 
 app/winhello.hrb: app/api.o
 	$(CC) $(APP_CFLAGS) -c app/winhello.c -o app/winhello.o
-	$(LD) $(APP_ELF_LDFLAGS) app/winhello.o app/api.o -o app/winhello.hrb
+	$(LD) $(APP_LDFLAGS) app/winhello.o app/api.o -o app/winhello.hrb
 
 app/winhelo2.hrb: app/api.o
 	$(CC) $(APP_CFLAGS) -c app/winhello2.c -o app/winhello2.o
-	$(LD) $(APP_ELF_LDFLAGS) app/winhello2.o app/api.o -o app/winhelo2.hrb
+	$(LD) $(APP_LDFLAGS) app/winhello2.o app/api.o -o app/winhelo2.hrb
 
 app/winhelo3.hrb: app/api.o
 	$(CC) $(APP_CFLAGS) -c app/winhello3.c -o app/winhello3.o
-	$(LD) $(APP_ELF_LDFLAGS) app/winhello3.o app/api.o -o app/winhelo3.hrb
+	$(LD) $(APP_LDFLAGS) app/winhello3.o app/api.o -o app/winhelo3.hrb
 
 app/star1.hrb: app/api.o
 	$(CC) $(APP_CFLAGS) -c app/star1.c -o app/star1.o
-	$(LD) $(APP_ELF_LDFLAGS) app/star1.o app/api.o -o app/star1.hrb
+	$(LD) $(APP_LDFLAGS) app/star1.o app/api.o -o app/star1.hrb
 
 app/stars.hrb: app/api.o $(LIBC_DIR)/stdlib/rand.bin
 	$(CC) $(APP_CFLAGS) -I $(LIBC_DIR)/include -c app/stars.c -o app/stars.o
-	$(LD) $(APP_ELF_LDFLAGS) app/stars.o app/api.o $(LIBC_DIR)/stdlib/rand.bin -o app/stars.hrb
+	$(LD) $(APP_LDFLAGS) app/stars.o app/api.o $(LIBC_DIR)/stdlib/rand.bin -o app/stars.hrb
 
 app/stars2.hrb: app/api.o $(LIBC_DIR)/stdlib/rand.bin
 	$(CC) $(APP_CFLAGS) -I $(LIBC_DIR)/include -c app/stars2.c -o app/stars2.o
-	$(LD) $(APP_ELF_LDFLAGS) app/stars2.o app/api.o $(LIBC_DIR)/stdlib/rand.bin -o app/stars2.hrb
+	$(LD) $(APP_LDFLAGS) app/stars2.o app/api.o $(LIBC_DIR)/stdlib/rand.bin -o app/stars2.hrb
 
 app/lines.hrb: app/api.o
 	$(CC) $(APP_CFLAGS) -c app/lines.c -o app/lines.o
-	$(LD) $(APP_ELF_LDFLAGS) app/lines.o app/api.o -o app/lines.hrb
+	$(LD) $(APP_LDFLAGS) app/lines.o app/api.o -o app/lines.hrb
 
 app/walk.hrb: app/api.o
 	$(CC) $(APP_CFLAGS) -c app/walk.c -o app/walk.o
-	$(LD) $(APP_ELF_LDFLAGS) app/walk.o app/api.o -o app/walk.hrb
+	$(LD) $(APP_LDFLAGS) app/walk.o app/api.o -o app/walk.hrb
 
 app/noodle.hrb: app/api.o $(LIBC_DIR)/stdio/stdio.bin
 	$(CC) $(APP_CFLAGS) -I $(LIBC_DIR)/include -fno-stack-protector -c app/noodle.c -o app/noodle.o
-	$(LD) $(APP_ELF_LDFLAGS) app/noodle.o app/api.o $(LIBC_DIR)/stdio/stdio.bin -o app/noodle.hrb
+	$(LD) $(APP_LDFLAGS) app/noodle.o app/api.o $(LIBC_DIR)/stdio/stdio.bin -o app/noodle.hrb
 
 app/beepdown.hrb: app/api.o
 	$(CC) $(APP_CFLAGS) -c app/beepdown.c -o app/beepdown.o
-	$(LD) $(APP_ELF_LDFLAGS) app/beepdown.o app/api.o -o app/beepdown.hrb
+	$(LD) $(APP_LDFLAGS) app/beepdown.o app/api.o -o app/beepdown.hrb
 
 app/beepup.hrb: app/api.o
 	$(CC) $(APP_CFLAGS) -c app/beepup.c -o app/beepup.o
-	$(LD) $(APP_ELF_LDFLAGS) app/beepup.o app/api.o -o app/beepup.hrb
+	$(LD) $(APP_LDFLAGS) app/beepup.o app/api.o -o app/beepup.hrb
 
 app/color.hrb: app/api.o
 	$(CC) $(APP_CFLAGS) -c app/color.c -o app/color.o
-	$(LD) $(APP_ELF_LDFLAGS) app/color.o app/api.o -o app/color.hrb
+	$(LD) $(APP_LDFLAGS) app/color.o app/api.o -o app/color.hrb
 
 app/color2.hrb: app/api.o
 	$(CC) $(APP_CFLAGS) -c app/color2.c -o app/color2.o
-	$(LD) $(APP_ELF_LDFLAGS) app/color2.o app/api.o -o app/color2.hrb
+	$(LD) $(APP_LDFLAGS) app/color2.o app/api.o -o app/color2.hrb
 
 kernel.sys: ${K_OBJS} ${L_OBJS}
 	$(LD) -m elf_i386 --oformat binary -o kernel.sys -T kernel.ld $^
