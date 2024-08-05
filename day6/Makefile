@@ -19,7 +19,7 @@ CFLAGS += -fno-pie
 QEMU_FLAGS 	+= -no-reboot -d in_asm
 
 # C Library Objects
-L_OBJS  := $(LIBC_DIR)/stdio/stdio.bin
+L_OBJS  := $(LIBC_DIR)/stdio/stdio.bin $(LIBC_DIR)/ssp/ssp.bin
 # Kernel Objects
 K_OBJS	:= bootpack.bin io.bin pm.bin hankaku.bin desctbl.bin graphic.bin \
 		int.bin inthandler.bin

@@ -23,7 +23,8 @@ APP_ELF_LDFLAGS	= -m elf_i386 --oformat elf32-i386 -e main -pie
 QEMU_FLAGS 	+= -no-reboot -d in_asm -m size=128
 
 # C Library Objects
-L_OBJS  := $(LIBC_DIR)/stdio/stdio.bin $(LIBC_DIR)/string/strcmp.bin $(LIBC_DIR)/string/strncmp.bin
+L_OBJS  := $(LIBC_DIR)/stdio/stdio.bin $(LIBC_DIR)/string/strcmp.bin \
+		$(LIBC_DIR)/string/strncmp.bin $(LIBC_DIR)/ssp/ssp.bin
 # Kernel Objects
 K_OBJS	:= bootpack.bin io.bin pm.bin hankaku.bin desctbl.bin graphic.bin \
 		int.bin inthandler.bin fifo.bin keyboard.bin mouse.bin \

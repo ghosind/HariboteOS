@@ -23,7 +23,7 @@ QEMU_FLAGS 	+= -no-reboot -d in_asm -m size=128
 
 # C Library Objects
 L_OBJS  := $(LIBC_DIR)/stdio/stdio.bin $(LIBC_DIR)/string/strcmp.bin \
-		$(LIBC_DIR)/string/strncmp.bin $(LIBC_DIR)/stdlib/rand.bin
+		$(LIBC_DIR)/string/strncmp.bin $(LIBC_DIR)/stdlib/rand.bin $(LIBC_DIR)/ssp/ssp.bin
 # Kernel Objects
 K_OBJS	:= kernel/bootpack.bin kernel/io.bin kernel/pm.bin kernel/hankaku.bin \
 		kernel/desctbl.bin kernel/graphic.bin kernel/int.bin \
