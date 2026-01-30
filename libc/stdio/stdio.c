@@ -6,14 +6,14 @@ static char *vsprint_num(char *s, unsigned long num, int base, int width, int pa
   static char *letters = "0123456789abcdefABCDEF";
   int i = 0, pos;
 
-  while (num > 0) {
+  do {
     pos = num % base;
     num /= base;
     if (uppercase && pos >= 10) {
       pos += 6;
     }
     buf[i++] = *(letters+pos);
-  }
+  } while (num > 0);
   if (sign) {
     buf[i++] = '-';
   }
