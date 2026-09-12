@@ -148,6 +148,7 @@ int memman_free(struct MemMan *man, unsigned int addr, unsigned int size) {
           }
         }
       }
+      return 0;
     }
   }
 
